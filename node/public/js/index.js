@@ -1,5 +1,5 @@
-const white = { p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔" };
-const black = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
+const black = { p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔" };
+const white = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
 
 const resetBtn = document.getElementById("resetBtn");
 

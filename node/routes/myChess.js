@@ -1,6 +1,6 @@
 export default function Chess() {
-  this.white = { p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔" };
-  this.black = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
+  this.black = { p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔" };
+  this.white = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
   this.startingPos = {
     a8: this.black.r,
     b8: this.black.n,
