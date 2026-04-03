@@ -7,12 +7,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const game = new Chess();
 const port = 3000;
+const game = new Chess();
 
 app.use(express.static(join(__dirname, "public")));
 app.use(express.json());
 // console.log(game.board);
+
+app.get("/reset", (req, res) => {
+  game.board = game._createBoard();
+  res.status(200).json(game.board);
+});
 
 app.get("/board", (req, res) => {
   res.status(200).json(game.board);

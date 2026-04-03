@@ -30,6 +30,13 @@ body {
   grid-template-rows: repeat(8, 1fr);
 }
 
+#resetBtn {
+  background-color: lightblue;
+  padding: 1rem;
+  margin: 1rem;
+  border-radius: 1rem;
+}
+
 .square {
   width: 70px;
   height: 70px;

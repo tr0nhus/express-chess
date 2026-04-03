@@ -1,6 +1,14 @@
 const white = { p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔" };
 const black = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
 
+const resetBtn = document.getElementById("resetBtn");
+resetBtn.addEventListener("click", async (e) => {
+  const res = await fetch("/reset", {
+    method: "GET",
+  });
+  renderBoard();
+});
+
 function getPieceColor(string) {
   if (typeof string !== "string") {
     throw new Error("Input must be a string");
@@ -173,6 +181,6 @@ function highlightValidMove(squareName) {
   }
 }
 let selectedSquare = null;
-let currentValidMoves = []; // New variable to store valid moves for the selected piece
+let currentValidMoves = [];
 
 renderBoard();
