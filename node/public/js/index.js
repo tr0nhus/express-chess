@@ -2,12 +2,18 @@ const white = { p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔" };
 const black = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
 
 const resetBtn = document.getElementById("resetBtn");
+
 resetBtn.addEventListener("click", async (e) => {
   const res = await fetch("/reset", {
     method: "GET",
   });
   renderBoard();
 });
+
+let selectedSquare = null;
+let currentValidMoves = [];
+
+renderBoard();
 
 function getPieceColor(string) {
   if (typeof string !== "string") {
@@ -51,6 +57,7 @@ async function renderBoard() {
 async function handleSquareClick(squareName) {
   console.log(`Clicked on ${squareName}`);
   clearHighlights(); // Clear all highlights first
+  const turn = await getTurn(); // Get the current turn
 
   if (selectedSquare === null) {
     // This is a "first" click
@@ -60,6 +67,9 @@ async function handleSquareClick(squareName) {
       const pieceColor = getPieceColor(clickedSquare.innerText);
       if (pieceColor) {
         // TODO: Only allow selecting pieces of the current turn's color
+        if (pieceColor !== turn) {
+          throw new Error(`Not ${pieceColor}'s turn to move`);
+        }
         selectedSquare = squareName;
         highlightSquare(squareName); // Highlight the selected square
 
@@ -82,7 +92,6 @@ async function handleSquareClick(squareName) {
     // A piece was already selected
     // Check if the clicked square is a valid move for the selected piece
     if (currentValidMoves.includes(squareName)) {
-      // Use the stored valid moves
       // This is a valid move
       console.log("Trying to move from", selectedSquare, "to", squareName);
       fetch("/move", {
@@ -121,7 +130,7 @@ async function handleSquareClick(squareName) {
         ? getPieceColor(clickedSquare.innerText)
         : null;
 
-      if (clickedSquare && clickedSquare.innerText && pieceColor) {
+      if (clickedSquare && clickedSquare.innerText && pieceColor === turn) {
         // If clicked on another piece of the same color, re-select it
         selectedSquare = squareName;
         highlightSquare(squareName);
@@ -164,7 +173,7 @@ function clearHighlights() {
 function highlightSquare(squareName) {
   const el = document.querySelector(`[data-pos="${squareName}"]`);
   if (el) {
-    el.style.outline = "4px solid yellow";
+    el.style.outline = "2px solid #3f7784";
     el.style.zIndex = "10";
   }
 }
@@ -180,7 +189,11 @@ function highlightValidMove(squareName) {
     }
   }
 }
-let selectedSquare = null;
-let currentValidMoves = [];
 
-renderBoard();
+async function getTurn() {
+  const res = await fetch("/turn", {
+    method: "GET",
+  });
+  const turn = await res.json();
+  return turn;
+}

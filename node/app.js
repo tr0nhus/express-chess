@@ -16,11 +16,17 @@ app.use(express.json());
 
 app.get("/reset", (req, res) => {
   game.board = game._createBoard();
+  game.turn = "white";
   res.status(200).json(game.board);
 });
 
 app.get("/board", (req, res) => {
   res.status(200).json(game.board);
+});
+
+app.get("/turn", (req, res) => {
+  const turn = game.turn;
+  res.status(200).json(turn);
 });
 
 app.post("/moves", (req, res) => {
@@ -35,8 +41,8 @@ app.post("/moves", (req, res) => {
 app.post("/move", (req, res) => {
   console.log(req.body);
   const moved = game.move(req.body);
-
-  res.status(moved ? 200 : 400).json({ success: moved }); // Send a response back to the client
+  // Here should go some implementation for turn validation
+  res.status(moved ? 200 : 400).json({ success: moved });
 });
 
 app.listen(port, () => {

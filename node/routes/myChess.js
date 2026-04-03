@@ -55,6 +55,7 @@ export default function Chess() {
   };
 
   this.board = this._createBoard();
+
   this.getSquare = function (name) {
     // Improved getSquare for efficiency
     for (let i = 0; i < this.board.length; i++) {
@@ -66,6 +67,7 @@ export default function Chess() {
     }
     return null; // Return null if square not found
   };
+
   this.turn = "white";
 
   this.move = function ({ from, to }) {
@@ -77,6 +79,13 @@ export default function Chess() {
       console.error(
         "Invalid 'from' or 'to' square, or no piece on 'from' square.",
       );
+      return false;
+    }
+
+    const fromColor = this._getPieceColor(fromSquare);
+
+    if (fromColor !== this.turn) {
+      console.error(`Not ${fromColor}'s turn to move`);
       return false;
     }
 
@@ -136,7 +145,6 @@ export default function Chess() {
     }
 
     // TODO: Filter moves to ensure they don't leave the king in check
-    // This is a complex step and might be implemented later.
 
     return possibleMoves;
   };
@@ -170,7 +178,6 @@ export default function Chess() {
         }
       }
     }
-    // TODO:
     // Diagonal moves
     const diags = [-1, 1];
     for (const offset of diags) {
@@ -182,6 +189,7 @@ export default function Chess() {
         }
       }
     }
+    // TODO: en passant
 
     return moves;
   };

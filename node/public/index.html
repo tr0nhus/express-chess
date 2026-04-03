@@ -1,18 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./css/style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
     <title>Document</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-</head>
-<body>
-    <div id="content">
-        <div id="board">
-        </div>
+  </head>
+  <body>
+    <!-- <table class="tableContainer">
+      <thead>
+        <tr>
+          <th>Piece</th>
+          <th>From</th>
+          <th>To</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table> -->
+    <div id="gameContainer">
+      <div id="boardContainer" class="main-content">
+        <div id="board"></div>
+      </div>
+      <div id="boardButtons">
+        <button><span class="material-icons"> flag </span> Resign</button>
+        <button><span class="material-icons">handshake</span> Draw</button>
+        <button id="resetBtn">
+          <span class="material-icons">autorenew</span> Reset
+        </button>
+      </div>
     </div>
-    <button id="resetBtn">Reset Board</button>
     <script src="./js/index.js" type="module"></script>
-</body>
+  </body>
 </html>
