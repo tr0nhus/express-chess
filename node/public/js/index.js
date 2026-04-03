@@ -83,6 +83,17 @@ function Chess() {
     toSquare.piece = fromSquare.piece; // Move the piece
     fromSquare.piece = ""; // Clear the original square
 
+    // Update game.board state
+    for (let i = 0; i < this.board.length; i++) {
+      for (let j = 0; j < this.board[i].length; j++) {
+        if (this.board[i][j].name === from) {
+          this.board[i][j].piece = ""; // Clear the original square
+        } else if (this.board[i][j].name === to) {
+          this.board[i][j].piece = toSquare.piece; // Set the new square
+        }
+      }
+    }
+
     // Switch turns
     this.turn = this.turn === "white" ? "black" : "white";
 
@@ -386,7 +397,7 @@ function Chess() {
 function Square(name, color) {
   this.name = name;
   this.color = color;
-  this.piece = ""; // Piece will be assigned by Chess._createBoard
+  this.piece = "";
 }
 
 function renderBoard() {
@@ -421,6 +432,7 @@ function handleSquareClick(squareName) {
   console.log(`Clicked on ${squareName}`);
   clearHighlights(); // Clear all highlights first
 
+  // This is a "first" click
   if (selectedSquare === null) {
     const clickedSquare = game.getSquare(squareName);
     if (clickedSquare && clickedSquare.piece) {
