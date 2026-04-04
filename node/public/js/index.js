@@ -1,19 +1,58 @@
 const black = { p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔" };
 const white = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
 
-const resetBtn = document.getElementById("resetBtn");
+const socket = io();
 
+const resetBtn = document.getElementById("resetBtn");
 resetBtn.addEventListener("click", async (e) => {
-  await fetch("/reset", {
-    method: "GET",
+  socket.emit("reset", roomCode);
+});
+
+let roomCode = prompt("Enter Room Code");
+if (!roomCode) {
+  roomCode = "defaultRoom"; // Provide a default or handle error
+  alert("No room code entered. Joining default room.");
+}
+
+function requestFromServer(event, data) {
+  return new Promise((resolve) => {
+    socket.emit(event, data, (response) => {
+      resolve(response);
+    });
   });
+}
+
+socket.emit("joinRoom", roomCode);
+
+let player = null;
+let selectedSquare = null;
+let currentValidMoves = [];
+let turn = null;
+
+socket.on("status", (message) => {
+  console.log(message);
+});
+
+socket.on("turn", (data) => {
+  turn = data;
+});
+
+socket.on("update", (data) => {
+  turn = data;
   renderBoard();
 });
 
-let selectedSquare = null;
-let currentValidMoves = [];
+async function updateValidMoves(square) {
+  return (currentValidMoves = await requestFromServer("getMoves", square));
+}
 
-renderBoard();
+socket.on("playerRole", (data) => {
+  console.log(data);
+  player = data;
+  renderBoard();
+});
+
+// renderBoard();
 
 function getPieceColor(string) {
   if (typeof string !== "string") {
@@ -26,30 +65,57 @@ function getPieceColor(string) {
 async function renderBoard() {
   // clear the board
   const boardElement = document.getElementById("board");
-  const res = await fetch("/board");
-  const data = await res.json();
+
+  const data = await requestFromServer("gameState", roomCode);
+
   const board = data.board;
   const moveHistory = data.moveHistory;
-  console.log(moveHistory);
+
+  // console.log(moveHistory);
+
+  if (!player) throw new Error(`Player: ${player} was not a valid string`);
 
   boardElement.innerHTML = "";
 
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      const square = document.createElement("div");
-      square.classList.add("square");
-      square.classList.add(board[i][j].color);
-      square.dataset.pos = board[i][j].name;
+  if (player === "white") {
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        const square = document.createElement("div");
+        square.classList.add("square");
+        square.classList.add(board[i][j].color);
+        square.dataset.pos = board[i][j].name;
 
-      square.innerText = board[i][j].piece;
+        square.innerText = board[i][j].piece;
 
-      if (square.innerText) square.style.cursor = "pointer";
+        if (square.innerText && getPieceColor(square.innerText) === player)
+          square.style.cursor = "pointer";
 
-      square.addEventListener("click", () =>
-        handleSquareClick(board[i][j].name),
-      );
+        square.addEventListener("click", () =>
+          handleSquareClick(board[i][j].name),
+        );
 
-      boardElement.appendChild(square);
+        boardElement.appendChild(square);
+      }
+    }
+  } else if (player === "black") {
+    for (let i = 7; i >= 0; i--) {
+      for (let j = 7; j >= 0; j--) {
+        const square = document.createElement("div");
+        square.classList.add("square");
+        square.classList.add(board[i][j].color);
+        square.dataset.pos = board[i][j].name;
+
+        square.innerText = board[i][j].piece;
+
+        if (square.innerText && getPieceColor(square.innerText) === player)
+          square.style.cursor = "pointer";
+
+        square.addEventListener("click", () =>
+          handleSquareClick(board[i][j].name),
+        );
+
+        boardElement.appendChild(square);
+      }
     }
   }
 
@@ -71,9 +137,15 @@ async function renderBoard() {
 }
 
 async function handleSquareClick(squareName) {
-  console.log(`Clicked on ${squareName}`);
-  clearHighlights(); // Clear all highlights first
-  const turn = await getTurn(); // Get the current turn
+  // console.log(`Clicked on ${squareName}`);
+  clearHighlights();
+  const currentTurn = await getTurn(); // Await the current turn
+  // console.log("Current turn:", currentTurn);
+  if (currentTurn !== player) {
+    throw new Error(
+      `It's not your turn. Current turn: ${currentTurn}, Your player: ${player}`,
+    );
+  }
 
   if (selectedSquare === null) {
     // This is a "first" click
@@ -82,23 +154,20 @@ async function handleSquareClick(squareName) {
       // If the clicked square has a piece
       const pieceColor = getPieceColor(clickedSquare.innerText);
       if (pieceColor) {
-        // TODO: Only allow selecting pieces of the current turn's color
-        if (pieceColor !== turn) {
+        // Check if a piece color was successfully determined
+        if (pieceColor !== currentTurn) {
+          // Use the awaited currentTurn
           throw new Error(`Not ${pieceColor}'s turn to move`);
         }
         selectedSquare = squareName;
         highlightSquare(squareName); // Highlight the selected square
 
-        // Highlight valid moves for the selected piece
-        const res = await fetch("/moves", {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-          body: JSON.stringify({ squareName: selectedSquare }), // Fetch moves for the selected piece
-        });
-        currentValidMoves = await res.json(); // Store valid moves for the selected piece
-        console.log("Valid moves for", selectedSquare, ":", currentValidMoves);
+        // Highlight valid moves for the selected piece using websocket
+
+        await updateValidMoves(squareName);
+
+        // console.log("Valid moves for", selectedSquare, ":", currentValidMoves);
+
         currentValidMoves.forEach((moveName) => highlightValidMove(moveName));
       } else {
         console.log("It's not your turn to move this piece.");
@@ -110,33 +179,24 @@ async function handleSquareClick(squareName) {
     if (currentValidMoves.includes(squareName)) {
       // This is a valid move
       console.log("Trying to move from", selectedSquare, "to", squareName);
-      fetch("/move", {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify({ from: selectedSquare, to: squareName }),
-      })
-        .then((response) => {
-          if (response.ok) {
-            selectedSquare = null;
-            currentValidMoves = []; // Clear valid moves
-            renderBoard(); // Re-render the board to show the move
-          } else {
-            console.error("Move Failed");
-            // Reset state and re-render to clear highlights
-            selectedSquare = null;
-            currentValidMoves = [];
-            renderBoard();
-          }
-        })
-        .catch((error) => {
-          console.error("Error during move fetch:", error);
-          // Reset state and re-render on error
-          selectedSquare = null;
-          currentValidMoves = [];
-          renderBoard();
-        });
+
+      const moved = requestFromServer("move", {
+        roomCode: roomCode,
+        from: selectedSquare,
+        to: squareName,
+      });
+
+      if (moved) {
+        console.log("Move Successful");
+        selectedSquare = null;
+        currentValidMoves = [];
+        renderBoard();
+      } else {
+        console.error("Move Failed");
+        selectedSquare = null;
+        currentValidMoves = [];
+        renderBoard();
+      }
     } else {
       // Clicked on an invalid square, or clicked on another piece.
       const clickedSquare = document.querySelector(
@@ -151,20 +211,15 @@ async function handleSquareClick(squareName) {
         selectedSquare = squareName;
         highlightSquare(squareName);
         // Fetch new valid moves for the newly selected piece
-        const res = await fetch("/moves", {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-          body: JSON.stringify({ squareName: selectedSquare }),
-        });
-        currentValidMoves = await res.json();
-        console.log(
-          "Valid moves for new selection",
-          selectedSquare,
-          ":",
-          currentValidMoves,
-        );
+        await updateValidMoves(squareName);
+
+        // console.log(
+        //   "Valid moves for new selection",
+        //   selectedSquare,
+        //   ":",
+        //   currentValidMoves,
+        // );
+
         currentValidMoves.forEach((moveName) => highlightValidMove(moveName));
       } else {
         // Otherwise, deselect and re-render
@@ -206,10 +261,11 @@ function highlightValidMove(squareName) {
   }
 }
 
-async function getTurn() {
-  const res = await fetch("/turn", {
-    method: "GET",
+function getTurn() {
+  return new Promise((resolve) => {
+    socket.emit("getTurn", (currentTurn) => {
+      turn = currentTurn; // Update the global 'turn' variable
+      resolve(currentTurn);
+    });
   });
-  const turn = await res.json();
-  return turn;
 }

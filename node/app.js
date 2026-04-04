@@ -1,54 +1,92 @@
 import express from "express";
+import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import Chess from "./routes/myChess.js";
+import { createServer } from "http";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+const httpServer = createServer(app);
 const port = 3000;
+
+const io = new Server(httpServer);
 const game = new Chess();
 
 app.use(express.static(join(__dirname, "public")));
-app.use(express.json());
-// console.log(game.board);
 
-app.get("/reset", (req, res) => {
-  game.board = game._createBoard();
-  game.turn = "white";
-  game.moveHistory = [];
-  res.status(200).json(game.board);
-});
+io.on("connection", (socket) => {
+  socket.on("joinRoom", (roomCode) => {
+    // Get the number of players in this room
+    const connectedSockets = io.sockets.adapter.rooms.get(roomCode);
+    const numClients = connectedSockets ? connectedSockets.size : 0;
 
-app.get("/board", (req, res) => {
-  res.status(200).json({
-    board: game.board,
-    moveHistory: game.moveHistory,
+    if (numClients === 0) {
+      socket.join(roomCode);
+      socket.player = "white";
+      socket.emit("playerRole", socket.player);
+      socket.emit("status", "Waiting for oppononent...");
+    } else if (numClients === 1) {
+      socket.join(roomCode);
+      socket.player = "black";
+      socket.emit("playerRole", socket.player);
+      io.to(roomCode).emit("status", "Second player joined...");
+    }
+  });
+
+  socket.on("disconnecting", () => {
+    for (const room of socket.rooms) {
+      if (room !== socket.id) {
+        socket.to(room).emit("status", "Your opponent disconnected.");
+      }
+    }
+  });
+
+  socket.on("reset", (roomCode) => {
+    game.board = game._createBoard();
+    game.turn = "white";
+    game.moveHistory = [];
+    io.to(roomCode).emit("update", game.turn);
+  });
+
+  socket.on("getMoves", (data, callback) => {
+    const validMoves = game.validMoves(data);
+    callback(validMoves);
+  });
+
+  socket.on("getTurn", (callback) => {
+    // 'callback' is the acknowledgment function
+    const turn = game.turn;
+    callback(turn); // Send the turn back as an acknowledgment
+  });
+
+  socket.on("gameState", (roomCode, callback) => {
+    const data = {
+      board: game.board,
+      turn: game.turn,
+      moveHistory: game.moveHistory,
+    };
+    callback(data);
+  });
+
+  socket.on("move", (data, callback) => {
+    if (game.turn !== socket.player) {
+      socket.emit("status", `Not ${socket.player}'s turn to move`);
+    }
+
+    console.log(data.from, data.to);
+    const moved = game.move({ from: data.from, to: data.to });
+
+    if (moved) {
+      socket.to(data.roomCode).emit("update", game.turn);
+    }
+
+    callback(moved);
   });
 });
 
-app.get("/turn", (req, res) => {
-  const turn = game.turn;
-  res.status(200).json(turn);
-});
-
-app.post("/moves", (req, res) => {
-  // console.log(req.body);
-  const { squareName } = req.body;
-  // console.log(squareName);
-  const validMoves = game.validMoves(squareName);
-
-  res.json(validMoves);
-});
-
-app.post("/move", (req, res) => {
-  console.log(req.body);
-  const moved = game.move(req.body);
-  // Here should go some implementation for turn validation
-  res.status(moved ? 200 : 400).json({ success: moved });
-});
-
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

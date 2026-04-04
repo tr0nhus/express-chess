@@ -111,15 +111,13 @@ export default function Chess() {
     this.turn = this.turn === "white" ? "black" : "white";
 
     // TODO: Handle special moves like castling, en passant, pawn promotion.
-    // TODO: Update game history (e.g., push { from, to, pieceMoved, capturedPiece } to an array).
     // TODO: Check for check/checkmate/stalemate after the move.
 
     return true;
   };
 
   this._saveMove = function (fromSquare, toSquare) {
-    // Implement storing of correct notation e.g. pawn to e4 -> e4 or queen takes rook on b7 -> QxRb7
-    // Should be stored in the this.moveHistory array
+    // TODO Notation for Castling, check and checkmate
     let move = "";
 
     const fromPieceType = fromSquare.piece;
