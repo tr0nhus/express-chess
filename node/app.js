@@ -84,9 +84,13 @@ io.on("connection", (socket) => {
     if (games[data.roomCode].turn !== socket.player) {
       socket.emit("status", `Not ${socket.player}'s turn to move`);
     }
+    console.log(data);
 
-    console.log(data.from, data.to);
-    const moved = games[data.roomCode].move({ from: data.from, to: data.to });
+    const moved = games[data.roomCode].move({
+      from: data.from,
+      to: data.to,
+      attackTarget: data.enPessentTarget || "",
+    });
 
     if (moved) {
       socket.to(data.roomCode).emit("update", games[data.roomCode].turn);

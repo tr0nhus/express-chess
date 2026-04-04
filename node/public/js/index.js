@@ -71,7 +71,7 @@ async function renderBoard() {
   const board = data.board;
   const moveHistory = data.moveHistory;
 
-  // console.log(moveHistory);
+  console.log(moveHistory);
 
   if (!player) throw new Error(`Player: ${player} was not a valid string`);
 
@@ -131,8 +131,12 @@ async function renderBoard() {
     const cellBlack = newRow.insertCell(2);
 
     cellRound.textContent = row + 1;
-    cellWhite.textContent = moveHistory[row * 2] || "...";
-    cellBlack.textContent = moveHistory[row * 2 + 1] || "...";
+    cellWhite.textContent = moveHistory[row * 2]
+      ? formatMove(moveHistory[row * 2])
+      : "...";
+    cellBlack.textContent = moveHistory[row * 2 + 1]
+      ? formatMove(moveHistory[row * 2 + 1])
+      : "...";
   }
 
   const tableContainer = document.querySelector(".moveTableContainer");
@@ -140,6 +144,45 @@ async function renderBoard() {
     top: tableContainer.scrollHeight,
     behavior: "smooth",
   });
+}
+
+function formatMove({ color, piece, from, to, specials }) {
+  let move = "";
+
+  let pieceMap = color === "white" ? white : black;
+
+  switch (piece) {
+    case pieceMap.p:
+      move = "";
+      break;
+    case pieceMap.r:
+      move += "R";
+      break;
+    case pieceMap.n:
+      move += "N";
+      break;
+    case pieceMap.b:
+      move += "B";
+      break;
+    case pieceMap.q:
+      move += "Q";
+      break;
+    case pieceMap.k:
+      move += "K";
+      break;
+  }
+
+  if (specials.includes("attack")) move += "x";
+
+  move += to;
+
+  if (specials.includes("short-castle")) move = "O-O";
+  if (specials.includes("long-castle")) move = "O-O-O";
+
+  if (specials.includes("check")) move += "+";
+  else if (specials.includes("mate")) move += "#";
+
+  return move;
 }
 
 async function handleSquareClick(squareName) {
@@ -174,7 +217,7 @@ async function handleSquareClick(squareName) {
 
         // console.log("Valid moves for", selectedSquare, ":", currentValidMoves);
 
-        currentValidMoves.forEach((moveName) => highlightValidMove(moveName));
+        currentValidMoves.forEach((move) => highlightValidMove(move));
       } else {
         console.log("It's not your turn to move this piece.");
       }
@@ -182,14 +225,20 @@ async function handleSquareClick(squareName) {
   } else {
     // A piece was already selected
     // Check if the clicked square is a valid move for the selected piece
-    if (currentValidMoves.includes(squareName)) {
+    const [move] = currentValidMoves.filter(
+      (move) => move.target === squareName,
+    );
+    if (move) {
       // This is a valid move
       console.log("Trying to move from", selectedSquare, "to", squareName);
+      console.log("Valid move was: ", move);
+      console.log("En Pessent Target was: ", move.enPessentTarget);
 
       const moved = requestFromServer("move", {
         roomCode: roomCode,
         from: selectedSquare,
         to: squareName,
+        enPessentTarget: move.enPessentTarget || "",
       });
 
       if (moved) {
@@ -204,6 +253,7 @@ async function handleSquareClick(squareName) {
         renderBoard();
       }
     } else {
+      console.log("HERE");
       // Clicked on an invalid square, or clicked on another piece.
       const clickedSquare = document.querySelector(
         `[data-pos="${squareName}"]`,
@@ -233,7 +283,7 @@ async function handleSquareClick(squareName) {
           //   currentValidMoves,
           // );
 
-          currentValidMoves.forEach((moveName) => highlightValidMove(moveName));
+          currentValidMoves.forEach((move) => highlightValidMove(move));
         } else {
           // Otherwise, deselect and re-render
           selectedSquare = null;
@@ -263,11 +313,12 @@ function highlightSquare(squareName) {
   }
 }
 
-function highlightValidMove(squareName) {
+function highlightValidMove(validMove) {
+  const squareName = validMove.target;
   const el = document.querySelector(`[data-pos="${squareName}"]`);
   if (el) {
     // Check if it's already highlighted as selectedSquare, don't override outline
-    if (!el.innerText) {
+    if (!validMove.attack) {
       el.classList.add("highlightEmpty");
     } else {
       el.classList.add("highlightEnemy");
