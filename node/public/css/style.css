@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
+
 body {
   margin: 0;
   padding: 0;
@@ -5,50 +7,226 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: black;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
-    "Helvetica Neue",
-    sans-serif;
+  background-color: #050b1a;
+  font-family: "Manrope", sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+.material-icons {
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px; /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: "liga";
+}
+
+/* Rules for sizing the icon. */
+.material-icons.md-18 {
+  font-size: 18px;
+}
+.material-icons.md-24 {
+  font-size: 24px;
+}
+.material-icons.md-36 {
+  font-size: 36px;
+}
+.material-icons.md-48 {
+  font-size: 48px;
+}
+
+/* Rules for using icons as black on a light background. */
+.material-icons.md-dark {
+  color: rgba(0, 0, 0, 0.54);
+}
+.material-icons.md-dark.md-inactive {
+  color: rgba(0, 0, 0, 0.26);
+}
+
+/* Rules for using icons as white on a dark background. */
+.material-icons.md-light {
+  color: rgba(255, 255, 255, 1);
+}
+.material-icons.md-light.md-inactive {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Custom scrollbar styling for Chrome/Safari */
+.scroll-box::-webkit-scrollbar {
+  width: 6px; /* Very thin bar */
+}
+
+.scroll-box::-webkit-scrollbar-track {
+  background: transparent; /* No background track */
+}
+
+.scroll-box::-webkit-scrollbar-thumb {
+  background-color: #ccc; /* Subtle grey handle */
+  border-radius: 10px; /* Rounded edges */
+}
+
+#page {
+  display: grid;
+  grid-template-columns: 5fr 2fr;
+  gap: 2rem;
+  margin: 2rem;
 }
 
 #board {
   user-select: none;
-
+  border: 5px solid black;
+  border-radius: 8px;
   display: grid;
-  justify-content: center;
-  align-items: center;
+  aspect-ratio: 1 / 1;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
 }
 
-.square {
-  width: 70px;
-  height: 70px;
-  font-size: 50px;
+#boardButtons {
+  width: 80vmin;
+  display: grid;
+  grid-template-columns: 2fr 2fr 3fr;
+  gap: 1rem;
+}
+
+#boardButtons button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #a3aac4;
+  background-color: #192540;
+  padding: 1rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  border: 0px;
+  gap: 1rem;
+}
+
+#boardButtons #resetBtn {
+  background-color: #34cfea;
+  color: #192540;
+}
+
+.tableContainer {
+  width: 40vmin;
+  background-color: #091328;
+  color: white;
+  border-radius: 1rem;
+  max-height: 80vmin;
+}
+
+.tableContainer h2 {
+  font-size: medium;
+  margin-left: 2 rem;
+  color: #a3aac4;
   text-align: center;
+  margin: 2rem;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  height: 100%;
+}
+
+thead,
+tbody {
+  display: block;
+}
+
+tbody {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+tr :first-child {
+  color: #a3aac4;
+  font-size: small;
+  width: 10%;
+}
+
+tr :nth-child(2) {
+  font-weight: 900;
+}
+
+th,
+td {
+  border-bottom: 1px solid #1f2b49;
+  padding: 8px;
+  text-align: left;
+}
+thead {
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: #0b1f2c;
+}
+
+.square {
+  width: 10vmin;
+  height: 10vmin;
+  font-size: 10vmin; /* Make font size responsive, relative to viewport */
+  text-align: center;
+  color: #a3aac4;
+  display: flex; /* Use flexbox to center piece vertically and horizontally */
+  justify-content: center;
+  align-items: center;
 }
 
 .white {
-  background-color: white;
+  background-color: #1f2b49;
 }
 
 .black {
-  background-color: rgb(114, 158, 114);
+  background-color: #192540;
 }
 
 .highlightEmpty {
-  background-color: rgb(24, 105, 172);
+  box-shadow: inset 0 0 0 1000px #63b4ff27;
 }
 
 .highlightEnemy {
-  background-color: rgb(153, 27, 27);
+  box-shadow: inset 0 0 0 1000px #97242477;
+}
+
+#gameContainer {
+  display: grid;
+  grid-auto-flow: row;
+  gap: 1rem;
+  /* Make #gameContainer a flex container to center its children (like #board) */
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+  justify-content: center; /* Center children along the main axis (vertical) */
+  align-items: center; /* Center children along the cross axis (horizontal) */
 }

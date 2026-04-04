@@ -1,17 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./css/style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
     <title>Document</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-</head>
-<body>
-    <div id="content">
-        <div id="board">
+  </head>
+  <body>
+    <div id="page">
+      <div id="gameContainer">
+        <div id="boardContainer" class="main-content">
+          <div id="board">
+            <div class="square white" data-pos="a8"></div>
+            <div class="square black" data-pos="b8"></div>
+            <div class="square white" data-pos="c8"></div>
+            <div class="square black" data-pos="d8"></div>
+            <div class="square white" data-pos="e8"></div>
+            <div class="square black" data-pos="f8"></div>
+            <div class="square white" data-pos="g8"></div>
+            <div class="square black" data-pos="h8"></div>
+            <div class="square black" data-pos="a7"></div>
+            <div class="square white" data-pos="b7"></div>
+            <div class="square black" data-pos="c7"></div>
+            <div class="square white" data-pos="d7"></div>
+            <div class="square black" data-pos="e7"></div>
+            <div class="square white" data-pos="f7"></div>
+            <div class="square black" data-pos="g7"></div>
+            <div class="square white" data-pos="h7"></div>
+            <div class="square white" data-pos="a6"></div>
+            <div class="square black" data-pos="b6"></div>
+            <div class="square white" data-pos="c6"></div>
+            <div class="square black" data-pos="d6"></div>
+            <div class="square white" data-pos="e6"></div>
+            <div class="square black" data-pos="f6"></div>
+            <div class="square white" data-pos="g6"></div>
+            <div class="square black" data-pos="h6"></div>
+            <div class="square black" data-pos="a5"></div>
+            <div class="square white" data-pos="b5"></div>
+            <div class="square black" data-pos="c5"></div>
+            <div class="square white" data-pos="d5"></div>
+            <div class="square black" data-pos="e5"></div>
+            <div class="square white" data-pos="f5"></div>
+            <div class="square black" data-pos="g5"></div>
+            <div class="square white" data-pos="h5"></div>
+            <div class="square white" data-pos="a4"></div>
+            <div class="square black" data-pos="b4"></div>
+            <div class="square white" data-pos="c4"></div>
+            <div class="square black" data-pos="d4"></div>
+            <div class="square white" data-pos="e4"></div>
+            <div class="square black" data-pos="f4"></div>
+            <div class="square white" data-pos="g4"></div>
+            <div class="square black" data-pos="h4"></div>
+            <div class="square black" data-pos="a3"></div>
+            <div class="square white" data-pos="b3"></div>
+            <div class="square black" data-pos="c3"></div>
+            <div class="square white" data-pos="d3"></div>
+            <div class="square black" data-pos="e3"></div>
+            <div class="square white" data-pos="f3"></div>
+            <div class="square black" data-pos="g3"></div>
+            <div class="square white" data-pos="h3"></div>
+            <div class="square white" data-pos="a2"></div>
+            <div class="square black" data-pos="b2"></div>
+            <div class="square white" data-pos="c2"></div>
+            <div class="square black" data-pos="d2"></div>
+            <div class="square white" data-pos="e2"></div>
+            <div class="square black" data-pos="f2"></div>
+            <div class="square white" data-pos="g2"></div>
+            <div class="square black" data-pos="h2"></div>
+            <div class="square black" data-pos="a1"></div>
+            <div class="square white" data-pos="b1"></div>
+            <div class="square black" data-pos="c1"></div>
+            <div class="square white" data-pos="d1"></div>
+            <div class="square black" data-pos="e1"></div>
+            <div class="square white" data-pos="f1"></div>
+            <div class="square black" data-pos="g1"></div>
+            <div class="square white" data-pos="h1"></div>
+          </div>
         </div>
+        <div id="boardButtons">
+          <button><span class="material-icons"> flag </span>RESIGN</button>
+          <button><span class="material-icons">handshake</span>DRAW</button>
+          <button id="resetBtn">
+            <span class="material-icons">autorenew</span>RESET
+          </button>
+        </div>
+      </div>
+      <div class="tableContainer">
+        <h2>MOVE HISTORY</h2>
+        <table id="move-table">
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
     <script src="./js/index.js" type="module"></script>
-</body>
+  </body>
 </html>
