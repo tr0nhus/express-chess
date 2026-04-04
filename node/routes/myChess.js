@@ -36,6 +36,8 @@ export default function Chess() {
     h1: this.white.r,
   };
 
+  this.moveHistory = [];
+
   this._createBoard = function () {
     let board = [];
     for (let i = 0; i < 8; i++) {
@@ -89,6 +91,8 @@ export default function Chess() {
       return false;
     }
 
+    this._saveMove(fromSquare, toSquare);
+
     toSquare.piece = fromSquare.piece; // Move the piece
     fromSquare.piece = ""; // Clear the original square
 
@@ -111,6 +115,45 @@ export default function Chess() {
     // TODO: Check for check/checkmate/stalemate after the move.
 
     return true;
+  };
+
+  this._saveMove = function (fromSquare, toSquare) {
+    // Implement storing of correct notation e.g. pawn to e4 -> e4 or queen takes rook on b7 -> QxRb7
+    // Should be stored in the this.moveHistory array
+    let move = "";
+
+    const fromPieceType = fromSquare.piece;
+    const fromPieceColor = this._getPieceColor(fromSquare);
+    let pieceMap = fromPieceColor === "white" ? this.white : this.black;
+
+    switch (fromPieceType) {
+      case pieceMap.p:
+        move = "";
+        break;
+      case pieceMap.r:
+        move += "R";
+        break;
+      case pieceMap.n:
+        move += "N";
+        break;
+      case pieceMap.b:
+        move += "B";
+        break;
+      case pieceMap.q:
+        move += "Q";
+        break;
+      case pieceMap.k:
+        move += "K";
+        break;
+    }
+
+    if (this._isEnemyPiece(toSquare, fromPieceColor)) {
+      move += "x";
+    }
+
+    move += toSquare.name;
+
+    this.moveHistory.push(move);
   };
 
   this.validMoves = function (squareName) {

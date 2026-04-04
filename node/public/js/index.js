@@ -4,7 +4,7 @@ const white = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
 const resetBtn = document.getElementById("resetBtn");
 
 resetBtn.addEventListener("click", async (e) => {
-  const res = await fetch("/reset", {
+  await fetch("/reset", {
     method: "GET",
   });
   renderBoard();
@@ -26,11 +26,11 @@ function getPieceColor(string) {
 async function renderBoard() {
   // clear the board
   const boardElement = document.getElementById("board");
-  const res = await fetch("/board", {
-    method: "GET",
-  });
-  const board = await res.json();
-  // console.log(board);
+  const res = await fetch("/board");
+  const data = await res.json();
+  const board = data.board;
+  const moveHistory = data.moveHistory;
+  console.log(moveHistory);
 
   boardElement.innerHTML = "";
 
@@ -51,6 +51,22 @@ async function renderBoard() {
 
       boardElement.appendChild(square);
     }
+  }
+
+  // render the move history
+  const tableBody = document.querySelector("#move-table tbody");
+  tableBody.innerHTML = "";
+
+  for (let row = 0; row * 2 <= moveHistory.length; row++) {
+    const newRow = tableBody.insertRow(-1);
+
+    const cellRound = newRow.insertCell(0);
+    const cellWhite = newRow.insertCell(1);
+    const cellBlack = newRow.insertCell(2);
+
+    cellRound.textContent = row + 1;
+    cellWhite.textContent = moveHistory[row * 2] || "...";
+    cellBlack.textContent = moveHistory[row * 2 + 1] || "...";
   }
 }
 

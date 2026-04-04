@@ -17,11 +17,15 @@ app.use(express.json());
 app.get("/reset", (req, res) => {
   game.board = game._createBoard();
   game.turn = "white";
+  game.moveHistory = [];
   res.status(200).json(game.board);
 });
 
 app.get("/board", (req, res) => {
-  res.status(200).json(game.board);
+  res.status(200).json({
+    board: game.board,
+    moveHistory: game.moveHistory,
+  });
 });
 
 app.get("/turn", (req, res) => {
