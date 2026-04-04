@@ -134,6 +134,12 @@ async function renderBoard() {
     cellWhite.textContent = moveHistory[row * 2] || "...";
     cellBlack.textContent = moveHistory[row * 2 + 1] || "...";
   }
+
+  const tableContainer = document.querySelector(".moveTableContainer");
+  tableContainer.scrollTo({
+    top: tableContainer.scrollHeight,
+    behavior: "smooth",
+  });
 }
 
 async function handleSquareClick(squareName) {
@@ -202,30 +208,38 @@ async function handleSquareClick(squareName) {
       const clickedSquare = document.querySelector(
         `[data-pos="${squareName}"]`,
       );
-      const pieceColor = clickedSquare.innerText
-        ? getPieceColor(clickedSquare.innerText)
-        : null;
 
-      if (clickedSquare && clickedSquare.innerText && pieceColor === turn) {
-        // If clicked on another piece of the same color, re-select it
-        selectedSquare = squareName;
-        highlightSquare(squareName);
-        // Fetch new valid moves for the newly selected piece
-        await updateValidMoves(squareName);
-
-        // console.log(
-        //   "Valid moves for new selection",
-        //   selectedSquare,
-        //   ":",
-        //   currentValidMoves,
-        // );
-
-        currentValidMoves.forEach((moveName) => highlightValidMove(moveName));
-      } else {
-        // Otherwise, deselect and re-render
+      if (selectedSquare === squareName) {
+        // Re-selected same square -> deselect and re-render
         selectedSquare = null;
         currentValidMoves = [];
         renderBoard();
+      } else {
+        const pieceColor = clickedSquare.innerText
+          ? getPieceColor(clickedSquare.innerText)
+          : null;
+
+        if (clickedSquare && clickedSquare.innerText && pieceColor === turn) {
+          // If clicked on another piece of the same color, re-select it
+          selectedSquare = squareName;
+          highlightSquare(squareName);
+          // Fetch new valid moves for the newly selected piece
+          await updateValidMoves(squareName);
+
+          // console.log(
+          //   "Valid moves for new selection",
+          //   selectedSquare,
+          //   ":",
+          //   currentValidMoves,
+          // );
+
+          currentValidMoves.forEach((moveName) => highlightValidMove(moveName));
+        } else {
+          // Otherwise, deselect and re-render
+          selectedSquare = null;
+          currentValidMoves = [];
+          renderBoard();
+        }
       }
     }
   }
