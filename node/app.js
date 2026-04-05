@@ -92,6 +92,10 @@ io.on("connection", (socket) => {
       attackTarget: data.enPessentTarget || "",
     });
 
+    if (games[socket.roomCode]._isKingInCheck(games[socket.roomCode].turn)) {
+      socket.emit("check", `${socket.player}'s king is in check`);
+    }
+
     if (moved) {
       socket.to(data.roomCode).emit("update", games[data.roomCode].turn);
     }

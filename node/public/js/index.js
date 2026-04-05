@@ -42,6 +42,10 @@ socket.on("update", (data) => {
   renderBoard();
 });
 
+socket.on("check", (message) => {
+  console.log(message);
+});
+
 async function updateValidMoves(square) {
   return (currentValidMoves = await requestFromServer("getMoves", square));
 }
