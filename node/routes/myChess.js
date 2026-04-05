@@ -1,3 +1,5 @@
+import { start } from "repl";
+
 export default function Chess() {
   this.black = { p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔" };
   this.white = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
@@ -72,10 +74,15 @@ export default function Chess() {
 
   this.turn = "white";
 
-  this.move = function ({ from, to }) {
+  this.move = async function ({ from, to, attackTarget = "" }) {
     // Function for moving a piece and updating the board
     const fromSquare = this.getSquare(from);
+    const fromPieceColor = this._getPieceColor(fromSquare);
     const toSquare = this.getSquare(to);
+    const specials =
+      attackTarget || this._isEnemyPiece(toSquare, fromPieceColor)
+        ? ["attack"]
+        : [];
 
     if (!fromSquare || !toSquare || !fromSquare.piece) {
       console.error(
@@ -84,14 +91,19 @@ export default function Chess() {
       return false;
     }
 
-    const fromColor = this._getPieceColor(fromSquare);
-
-    if (fromColor !== this.turn) {
-      console.error(`Not ${fromColor}'s turn to move`);
+    if (fromPieceColor !== this.turn) {
+      console.error(`Not ${fromPieceColor}'s turn to move`);
       return false;
     }
 
-    this._saveMove(fromSquare, toSquare);
+    const fromPieceType = fromSquare.piece;
+    const fromSquareName = fromSquare.name;
+    const toSquareName = toSquare.name;
+
+    if (attackTarget) {
+      const attackTargetSquare = this.getSquare(attackTarget);
+      attackTargetSquare.piece = "";
+    }
 
     toSquare.piece = fromSquare.piece; // Move the piece
     fromSquare.piece = ""; // Clear the original square
@@ -110,53 +122,42 @@ export default function Chess() {
     // Switch turns
     this.turn = this.turn === "white" ? "black" : "white";
 
+    if (this._isKingInCheck(this.turn)) specials.push("check");
+
+    this._saveMove(
+      fromPieceColor,
+      fromPieceType,
+      fromSquareName,
+      toSquareName,
+      specials,
+    );
+
     // TODO: Handle special moves like castling, en passant, pawn promotion.
-    // TODO: Update game history (e.g., push { from, to, pieceMoved, capturedPiece } to an array).
     // TODO: Check for check/checkmate/stalemate after the move.
 
     return true;
   };
 
-  this._saveMove = function (fromSquare, toSquare) {
-    // Implement storing of correct notation e.g. pawn to e4 -> e4 or queen takes rook on b7 -> QxRb7
-    // Should be stored in the this.moveHistory array
-    let move = "";
-
-    const fromPieceType = fromSquare.piece;
-    const fromPieceColor = this._getPieceColor(fromSquare);
-    let pieceMap = fromPieceColor === "white" ? this.white : this.black;
-
-    switch (fromPieceType) {
-      case pieceMap.p:
-        move = "";
-        break;
-      case pieceMap.r:
-        move += "R";
-        break;
-      case pieceMap.n:
-        move += "N";
-        break;
-      case pieceMap.b:
-        move += "B";
-        break;
-      case pieceMap.q:
-        move += "Q";
-        break;
-      case pieceMap.k:
-        move += "K";
-        break;
-    }
-
-    if (this._isEnemyPiece(toSquare, fromPieceColor)) {
-      move += "x";
-    }
-
-    move += toSquare.name;
-
-    this.moveHistory.push(move);
+  this._saveMove = function (
+    fromPieceColor,
+    fromPieceType,
+    fromSquareName,
+    toSquareName,
+    specials = [],
+  ) {
+    // if (this._isEnemyPiece(toSquare, fromPieceColor)) {
+    //   specials.push("attack");
+    // }
+    this.moveHistory.push({
+      color: fromPieceColor,
+      piece: fromPieceType,
+      from: fromSquareName,
+      to: toSquareName,
+      specials: specials,
+    });
   };
 
-  this.validMoves = function (squareName) {
+  this.possibleMoves = function (squareName) {
     // Function for finding all the tiles which the piece in the square can move to
     const square = this.getSquare(squareName);
     if (!square || !square.piece) return [];
@@ -192,6 +193,52 @@ export default function Chess() {
     return possibleMoves;
   };
 
+  this.validMoves = function (squareName) {
+    const possibleMoves = this.possibleMoves(squareName);
+    const pieceColor = this._getPieceColor(this.getSquare(squareName));
+
+    return possibleMoves.filter((move) => {
+      const startSquare = this.getSquare(squareName);
+      const targetSquare = this.getSquare(move.target);
+      const movingPiece = startSquare.piece;
+      const capturedPiece = targetSquare.piece;
+
+      // Simulate moving
+      targetSquare.piece = startSquare.piece; // Move the piece
+      startSquare.piece = ""; // Clear the original square
+
+      const isKingSafe = !this._isKingInCheck(pieceColor);
+
+      startSquare.piece = movingPiece;
+      targetSquare.piece = capturedPiece;
+
+      return isKingSafe;
+    });
+  };
+
+  this._isKingInCheck = function (playerColor) {
+    const possibleOpponentMoves = [];
+    const kingPiece = playerColor === "white" ? this.white.k : this.black.k;
+    let kingSquare = null;
+    const opponentColor = playerColor === "white" ? "black" : "white";
+
+    const pieceMap = opponentColor === "white" ? this.white : this.black;
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (this.board[i][j].piece === kingPiece) kingSquare = this.board[i][j];
+
+        if (Object.values(pieceMap).includes(this.board[i][j].piece)) {
+          possibleOpponentMoves.push(
+            ...this.possibleMoves(this.board[i][j].name),
+          );
+        }
+      }
+    }
+    return possibleOpponentMoves.some(
+      (move) => move.target === kingSquare.name,
+    );
+  };
+
   this._getValidPawnMoves = function (square, pieceColor) {
     const moves = [];
     const { row, col } = this._getCoords(square.name);
@@ -203,7 +250,10 @@ export default function Chess() {
     if (oneStepForwardName) {
       const oneStepSquare = this.getSquare(oneStepForwardName);
       if (oneStepSquare && !oneStepSquare.piece) {
-        moves.push(oneStepForwardName);
+        moves.push({
+          target: oneStepForwardName,
+          attack: this._isEnemyPiece(oneStepForwardName),
+        });
 
         // if we can move once, maybe we can move twice
         if (row === startRank) {
@@ -215,7 +265,10 @@ export default function Chess() {
           if (twoStepsForwardName) {
             const twoStepsSquare = this.getSquare(twoStepsForwardName);
             if (twoStepsSquare && !twoStepsSquare.piece) {
-              moves.push(twoStepsForwardName);
+              moves.push({
+                target: twoStepsForwardName,
+                attack: this._isEnemyPiece(twoStepsForwardName),
+              });
             }
           }
         }
@@ -228,13 +281,51 @@ export default function Chess() {
       if (diagName) {
         const diagSquare = this.getSquare(diagName);
         if (diagSquare && this._isEnemyPiece(diagSquare, pieceColor)) {
-          moves.push(diagName);
+          moves.push({ target: diagName, attack: true });
         }
       }
     }
-    // TODO: en passant
+    // en passant
+    if (this.moveHistory.length > 0) {
+      const lastMove = this.moveHistory[this.moveHistory.length - 1];
+      const lastMovePieceMap =
+        lastMove.color === "white" ? this.white : this.black;
+
+      // Check if last move was a double pawn push
+      if (
+        lastMove.piece === lastMovePieceMap.p &&
+        Math.abs(
+          this._getCoords(lastMove.from).row - this._getCoords(lastMove.to).row,
+        ) === 2
+      ) {
+        const lastMoveCoords = this._getCoords(lastMove.to);
+        // Check if the double-pushed pawn is on an adjacent column in the same row
+        if (
+          lastMoveCoords.row === row &&
+          Math.abs(lastMoveCoords.col - col) === 1
+        ) {
+          // The en passant target square is the square the pawn skipped over
+          const enPassantTargetName = this._getSquareName(
+            row + direction,
+            lastMoveCoords.col,
+          );
+          moves.push({
+            target: enPassantTargetName,
+            attack: true,
+            enPessentTarget: lastMove.to,
+          });
+        }
+      }
+    }
 
     return moves;
+  };
+
+  this._isGameOver = function () {
+    // Find the white king and all the possible moves of that king
+    // Then find all possible moves of white pieces and check if the king can move to safety
+    // Repeat for other player
+    // Some logic for determining if pieces can be moved to protect the king???
   };
 
   this._getValidRookMoves = function (square, pieceColor) {
@@ -262,11 +353,17 @@ export default function Chess() {
         if (this._isFriendlyPiece(targetSquare, pieceColor)) break;
 
         if (this._isEnemyPiece(targetSquare, pieceColor)) {
-          moves.push(targetName);
+          moves.push({
+            target: targetName,
+            attack: true,
+          });
           break;
         }
 
-        moves.push(targetName);
+        moves.push({
+          target: targetName,
+          attack: false,
+        });
       }
     }
     return moves;
@@ -299,7 +396,10 @@ export default function Chess() {
 
       if (this._isFriendlyPiece(targetSquare, pieceColor)) continue;
 
-      moves.push(targetName);
+      moves.push({
+        target: targetName,
+        attack: this._isEnemyPiece(targetSquare, pieceColor),
+      });
     }
 
     return moves;
@@ -330,11 +430,17 @@ export default function Chess() {
         if (this._isFriendlyPiece(targetSquare, pieceColor)) break;
 
         if (this._isEnemyPiece(targetSquare, pieceColor)) {
-          moves.push(targetName);
+          moves.push({
+            target: targetName,
+            attack: true,
+          });
           break;
         }
 
-        moves.push(targetName);
+        moves.push({
+          target: targetName,
+          attack: false,
+        });
       }
     }
     return moves;
@@ -369,11 +475,17 @@ export default function Chess() {
         if (this._isFriendlyPiece(targetSquare, pieceColor)) break;
 
         if (this._isEnemyPiece(targetSquare, pieceColor)) {
-          moves.push(targetName);
+          moves.push({
+            target: targetName,
+            attack: true,
+          });
           break;
         }
 
-        moves.push(targetName);
+        moves.push({
+          target: targetName,
+          attack: false,
+        });
       }
     }
     return moves;
@@ -406,7 +518,10 @@ export default function Chess() {
 
       if (this._isFriendlyPiece(targetSquare, pieceColor)) continue;
 
-      moves.push(targetName);
+      moves.push({
+        target: targetName,
+        attack: this._isEnemyPiece(targetSquare, pieceColor),
+      });
     }
 
     return moves;
