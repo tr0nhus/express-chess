@@ -89,6 +89,7 @@ io.on("connection", (socket) => {
     const moved = games[data.roomCode].move({
       from: data.from,
       to: data.to,
+      specials: data.specials || [],
       attackTarget: data.enPessentTarget || "",
     });
 

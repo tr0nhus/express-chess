@@ -103,7 +103,7 @@ async function renderBoard() {
     }
   } else if (player === "black") {
     for (let i = 7; i >= 0; i--) {
-      for (let j = 7; j >= 0; j--) {
+      for (let j = 0; j < 8; j++) {
         const square = document.createElement("div");
         square.classList.add("square");
         square.classList.add(board[i][j].color);
@@ -242,6 +242,7 @@ async function handleSquareClick(squareName) {
         roomCode: roomCode,
         from: selectedSquare,
         to: squareName,
+        specials: move.specials || [],
         enPessentTarget: move.enPessentTarget || "",
       });
 

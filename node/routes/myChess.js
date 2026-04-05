@@ -74,15 +74,19 @@ export default function Chess() {
 
   this.turn = "white";
 
-  this.move = async function ({ from, to, attackTarget = "" }) {
+  this.move = async function ({
+    from,
+    to,
+    attackTarget: enPessentTarget = "",
+    specials = [],
+  }) {
     // Function for moving a piece and updating the board
     const fromSquare = this.getSquare(from);
     const fromPieceColor = this._getPieceColor(fromSquare);
     const toSquare = this.getSquare(to);
-    const specials =
-      attackTarget || this._isEnemyPiece(toSquare, fromPieceColor)
-        ? ["attack"]
-        : [];
+    if (enPessentTarget) {
+      specials.push("attack");
+    }
 
     if (!fromSquare || !toSquare || !fromSquare.piece) {
       console.error(
@@ -96,33 +100,57 @@ export default function Chess() {
       return false;
     }
 
+    const validMoves = this.validMoves(from); // Pass the square name string, not the object
+    const move = validMoves.filter((move) => move.target === to);
+    if (move) {
+      if (move.specials) specials.push(...move.specials);
+    } else {
+      console.error(`Not a valid move`);
+      return false;
+    }
+
     const fromPieceType = fromSquare.piece;
     const fromSquareName = fromSquare.name;
     const toSquareName = toSquare.name;
 
-    if (attackTarget) {
-      const attackTargetSquare = this.getSquare(attackTarget);
+    if (enPessentTarget) {
+      const attackTargetSquare = this.getSquare(enPessentTarget);
       attackTargetSquare.piece = "";
     }
 
     toSquare.piece = fromSquare.piece; // Move the piece
     fromSquare.piece = ""; // Clear the original square
 
-    // Update game.board state
-    for (let i = 0; i < this.board.length; i++) {
-      for (let j = 0; j < this.board[i].length; j++) {
-        if (this.board[i][j].name === from) {
-          this.board[i][j].piece = ""; // Clear the original square
-        } else if (this.board[i][j].name === to) {
-          this.board[i][j].piece = toSquare.piece; // Set the new square
-        }
-      }
+    if (specials.includes("long-castle")) {
+      const row = fromPieceColor === "white" ? 7 : 0;
+      const rookFrom = this._getSquareName(row, 0);
+      const rookTo = this._getSquareName(row, 2);
+      const rookSquareFrom = this.getSquare(rookFrom);
+      const rookSquareTo = this.getSquare(rookTo);
+      rookSquareTo.piece = rookSquareFrom.piece;
+      rookSquareFrom.piece = "";
+    }
+
+    if (specials.includes("short-castle")) {
+      const row = fromPieceColor === "white" ? 7 : 0;
+      const rookFrom = this._getSquareName(row, 7);
+      const rookTo = this._getSquareName(row, 5);
+      const rookSquareFrom = this.getSquare(rookFrom);
+      const rookSquareTo = this.getSquare(rookTo);
+      rookSquareTo.piece = rookSquareFrom.piece;
+      rookSquareFrom.piece = "";
     }
 
     // Switch turns
     this.turn = this.turn === "white" ? "black" : "white";
 
-    if (this._isKingInCheck(this.turn)) specials.push("check");
+    if (this._isKingInCheck(this.turn)) {
+      if (this._isCheckMate(this.turn)) {
+        specials.push("mate");
+      } else {
+        specials.push("check");
+      }
+    }
 
     this._saveMove(
       fromPieceColor,
@@ -132,10 +160,46 @@ export default function Chess() {
       specials,
     );
 
-    // TODO: Handle special moves like castling, en passant, pawn promotion.
-    // TODO: Check for check/checkmate/stalemate after the move.
+    // TODO: Handle special moves like pawn promotion.
+    // TODO: Check for checkmate/stalemate after the move.
 
     return true;
+  };
+
+  this._simulateMove = function (
+    { fromName, toName, enPessentTarget = "", specials = [] },
+    callback,
+  ) {
+    const fromSquare = this.getSquare(fromName);
+    const toSquare = this.getSquare(toName);
+
+    // save state
+    const movingPiece = fromSquare.piece;
+    const targetPiece = toSquare.piece;
+
+    // simulate move
+    toSquare.piece = fromSquare.piece;
+    fromSquare.piece = "";
+
+    // Special logic:
+    let epSquare, epPiece;
+    if (enPessentTarget) {
+      epSquare = this.getSquare(enPessentTarget);
+      epPiece = epSquare.piece;
+      // Simulate en pessent
+      epSquare.piece = "";
+    }
+
+    const result = callback();
+
+    // undo everything
+    fromSquare.piece = movingPiece;
+    toSquare.piece = targetPiece;
+    if (enPessentTarget) {
+      epSquare.piece = epPiece;
+    }
+
+    return result;
   };
 
   this._saveMove = function (
@@ -187,18 +251,20 @@ export default function Chess() {
         possibleMoves = this._getValidKingMoves(square, pieceColor);
         break;
     }
-
-    // TODO: Filter moves to ensure they don't leave the king in check
-
     return possibleMoves;
   };
 
   this.validMoves = function (squareName) {
-    const possibleMoves = this.possibleMoves(squareName);
-    const pieceColor = this._getPieceColor(this.getSquare(squareName));
+    const startSquare = this.getSquare(squareName);
+    if (!startSquare || !startSquare.piece) {
+      return [];
+    }
 
-    return possibleMoves.filter((move) => {
-      const startSquare = this.getSquare(squareName);
+    const possibleMoves = this.possibleMoves(squareName);
+    const pieceColor = this._getPieceColor(startSquare);
+
+    // Filter moves for leaving king in check
+    const validMoves = possibleMoves.filter((move) => {
       const targetSquare = this.getSquare(move.target);
       const movingPiece = startSquare.piece;
       const capturedPiece = targetSquare.piece;
@@ -214,6 +280,16 @@ export default function Chess() {
 
       return isKingSafe;
     });
+
+    // Special logic for castling
+    if (
+      startSquare.piece === this.white.k ||
+      startSquare.piece === this.black.k
+    ) {
+      const castlingMoves = this._getCastlingMoves(startSquare, pieceColor);
+      validMoves.push(...castlingMoves);
+    }
+    return validMoves;
   };
 
   this._isKingInCheck = function (playerColor) {
@@ -237,6 +313,108 @@ export default function Chess() {
     return possibleOpponentMoves.some(
       (move) => move.target === kingSquare.name,
     );
+  };
+
+  this._isCheckMate = function (color) {
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        const square = this.board[i][j];
+        if (this._getPieceColor(square) === color) {
+          const validMoves = this.validMoves(square.name);
+          if (validMoves.length > 0) return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  this._getCastlingMoves = function (kingSquare, pieceColor) {
+    const castlingMoves = [];
+    // Rules of castling:
+    // 1. Neither the king nor the rook can have moved priviously
+    // 2. There must be no pieces in between
+    // 3. The king cannot currently be in check
+    // 4. The king cannot pass throgh check or land on check
+    const kingPiece = kingSquare.piece;
+    // Check if the king has moved
+    if (!this.moveHistory.some((move) => move.piece === kingPiece)) {
+      const rookPiece = pieceColor === "white" ? this.white.r : this.black.r;
+      const row = pieceColor === "white" ? 7 : 0;
+
+      // Kingside Castling (Short)
+      const hRookSquare = this.getSquare(this._getSquareName(row, 7));
+      if (
+        hRookSquare &&
+        hRookSquare.piece === rookPiece &&
+        !this.moveHistory.some((m) => m.from === hRookSquare.name)
+      ) {
+        const path = [this._getSquareName(row, 5), this._getSquareName(row, 6)];
+        // check for pieces in between
+        if (
+          path.every((name) => !this.getSquare(name).piece) &&
+          !this._isKingInCheck(pieceColor)
+        ) {
+          // Check if squares king passes through are under attack
+          const isPathSafe = path.every((name) => {
+            const tempSquare = this.getSquare(name);
+            // Simulate move
+            tempSquare.piece = kingSquare.piece;
+            kingSquare.piece = "";
+            // Check if path step is safe
+            const safe = !this._isKingInCheck(pieceColor);
+            // undo move
+            kingSquare.piece = tempSquare.piece;
+            tempSquare.piece = "";
+            return safe;
+          });
+          if (isPathSafe)
+            castlingMoves.push({
+              target: path[1],
+              attack: false,
+              specials: ["short-castle"],
+            });
+        }
+      }
+
+      // Queenside Castling (Long)
+      const aRookSquare = this.getSquare(this._getSquareName(row, 0));
+      if (
+        aRookSquare &&
+        aRookSquare.piece === rookPiece &&
+        !this.moveHistory.some((m) => m.from === aRookSquare.name)
+      ) {
+        const path = [
+          this._getSquareName(row, 1),
+          this._getSquareName(row, 2),
+          this._getSquareName(row, 3),
+        ];
+        if (
+          path.every((name) => !this.getSquare(name).piece) &&
+          !this._isKingInCheck(pieceColor)
+        ) {
+          // Check if squares king passes through are under attack
+          const isPathSafe = path.every((name) => {
+            const tempSquare = this.getSquare(name);
+            // Simulate move
+            tempSquare.piece = kingSquare.piece;
+            kingSquare.piece = "";
+            // Check if path step is safe
+            const safe = !this._isKingInCheck(pieceColor);
+            // undo move
+            kingSquare.piece = tempSquare.piece;
+            tempSquare.piece = "";
+            return safe;
+          });
+          if (isPathSafe)
+            castlingMoves.push({
+              target: path[0],
+              attack: false,
+              specials: ["long-castle"],
+            });
+        }
+      }
+    }
+    return castlingMoves;
   };
 
   this._getValidPawnMoves = function (square, pieceColor) {
@@ -523,12 +701,15 @@ export default function Chess() {
         attack: this._isEnemyPiece(targetSquare, pieceColor),
       });
     }
-
     return moves;
   };
 
   // Helper function for finding the color of a piece based on the Unicode character of the piece
   this._getPieceColor = function (square) {
+    if (!square) {
+      // Handle cases where square is null or undefined
+      return "";
+    }
     if (!square.piece) return "";
     return Object.values(this.white).includes(square.piece) ? "white" : "black";
   };
