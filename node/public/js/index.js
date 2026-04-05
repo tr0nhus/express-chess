@@ -3,16 +3,64 @@ const white = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚" };
 
 const socket = io();
 
+// UI Elements
+const loginPage = document.getElementById("login-page");
+const gamePage = document.getElementById("game-page");
+const loginForm = document.getElementById("login-form");
+const createBtn = document.getElementById("createBtn");
+const joinBtn = document.getElementById("joinBtn");
 const resetBtn = document.getElementById("resetBtn");
+
+const inputs = document.querySelectorAll(".otp-container input");
+
+inputs.forEach((input, index) => {
+  input.addEventListener("input", (e) => {
+    if (e.target.value.length === 1 && index < inputs.length - 1) {
+      inputs[index + 1].focus(); // Move to next box
+    }
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace" && !e.target.value && index > 0) {
+      inputs[index - 1].focus(); // Move back on delete
+    }
+  });
+});
+
+let roomCode; // Will be set on login
+
 resetBtn.addEventListener("click", async (e) => {
   socket.emit("reset", roomCode);
 });
 
-let roomCode = prompt("Enter Room Code");
-if (!roomCode) {
-  roomCode = "defaultRoom"; // Provide a default or handle error
-  alert("No room code entered. Joining default room.");
-}
+joinBtn.addEventListener("click", (e) => {
+  roomCode = "";
+
+  inputs.forEach((input) => {
+    roomCode += input.value;
+  });
+
+  if (roomCode.length !== 4) return;
+
+  loginPage.classList.add("hidden");
+  gamePage.classList.remove("hidden");
+
+  socket.emit("joinRoom", roomCode);
+});
+
+createBtn.addEventListener("click", async (e) => {
+  roomCode = await requestFromServer("createRoom", "Clicked create button");
+  console.log(roomCode);
+  loginPage.classList.add("hidden");
+  gamePage.classList.remove("hidden");
+  renderBoard();
+});
+
+// let roomCode = prompt("Enter Room Code");
+// if (!roomCode) {
+//   roomCode = "defaultRoom"; // Provide a default or handle error
+//   alert("No room code entered. Joining default room.");
+// }
 
 function requestFromServer(event, data) {
   return new Promise((resolve) => {
@@ -21,8 +69,6 @@ function requestFromServer(event, data) {
     });
   });
 }
-
-socket.emit("joinRoom", roomCode);
 
 let player = null;
 let selectedSquare = null;
@@ -53,7 +99,9 @@ async function updateValidMoves(square) {
 socket.on("playerRole", (data) => {
   console.log(data);
   player = data;
-  renderBoard();
+  if (roomCode) {
+    renderBoard();
+  }
 });
 
 // renderBoard();
@@ -69,7 +117,10 @@ function getPieceColor(string) {
 async function renderBoard() {
   // clear the board
   const boardElement = document.getElementById("board");
+  const roomCodeDisplay = document.getElementById("roomCode");
+  roomCodeDisplay.innerText = roomCode.split("").join(" ");
 
+  // console.log(roomCode);
   const data = await requestFromServer("gameState", roomCode);
 
   const board = data.board;

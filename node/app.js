@@ -19,6 +19,25 @@ const games = {};
 app.use(express.static(join(__dirname, "public")));
 
 io.on("connection", (socket) => {
+  socket.on("createRoom", (data, callback) => {
+    let roomCode;
+    do {
+      roomCode = Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0");
+    } while (games[roomCode]);
+
+    games[roomCode] = new Chess();
+
+    socket.join(roomCode);
+    socket.roomCode = roomCode;
+    socket.player = "white";
+
+    socket.emit("playerRole", socket.player);
+    socket.emit("status", "Room created, waiting for opponent...");
+
+    callback(roomCode);
+  });
   socket.on("joinRoom", (roomCode) => {
     // Get the number of players in this room
     const connectedSockets = io.sockets.adapter.rooms.get(roomCode);
@@ -72,6 +91,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("gameState", (roomCode, callback) => {
+    console.log(roomCode);
     const data = {
       board: games[roomCode].board,
       turn: games[roomCode].turn,

@@ -13,7 +13,47 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   </head>
   <body>
-    <div id="page">
+    <div id="login-page" class="">
+      <div id="join-card">
+        <h2>CREATE OR JOIN ROOM:</h2>
+        <div class="otp-container">
+          <input
+            type="text"
+            maxlength="1"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            pattern="\d{1}"
+          />
+          <input
+            type="text"
+            maxlength="1"
+            inputmode="numeric"
+            pattern="\d{1}"
+          />
+          <input
+            type="text"
+            maxlength="1"
+            inputmode="numeric"
+            pattern="\d{1}"
+          />
+          <input
+            type="text"
+            maxlength="1"
+            inputmode="numeric"
+            pattern="\d{1}"
+          />
+        </div>
+        <div id="joinButtons">
+          <button id="createBtn">
+            <span class="material-icons adapt">add</span>CREATE ROOM
+          </button>
+          <button id="joinBtn">
+            <span class="material-icons adapt">meeting_room</span>JOIN ROOM
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="game-page" class="hidden">
       <div id="gameContainer">
         <div id="boardContainer" class="main-content">
           <div id="board">
@@ -84,8 +124,12 @@
           </div>
         </div>
         <div id="boardButtons">
-          <button><span class="material-icons"> flag </span>RESIGN</button>
-          <button><span class="material-icons">handshake</span>DRAW</button>
+          <button id="resignBtn">
+            <span class="material-icons"> flag </span>RESIGN
+          </button>
+          <button id="drawBtn">
+            <span class="material-icons">handshake</span>DRAW
+          </button>
           <button id="resetBtn">
             <span class="material-icons">autorenew</span>RESET
           </button>
@@ -104,6 +148,8 @@
             </tbody>
           </table>
         </div>
+        <h2>ROOM CODE</h2>
+        <p id="roomCode">X X X X</p>
       </div>
     </div>
     <script src="./js/index.js" type="module"></script>

@@ -9,6 +9,8 @@ body {
   align-items: center;
   background-color: #050b1a;
   font-family: "Manrope", sans-serif;
+  align-items: center;
+  justify-content: center;
 }
 
 button,
@@ -87,11 +89,63 @@ textarea {
   border-radius: 10px; /* Rounded edges */
 }
 
-#page {
+#game-page {
   display: grid;
   grid-template-columns: 5fr 2fr;
   gap: 2rem;
   margin: 2rem;
+}
+
+#login-page {
+  /* width: 100vh; */ /* This can make it too wide on portrait screens */
+  display: flex; /* Use flexbox for easier centering */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  color: white;
+  text-align: center;
+}
+
+#login-page h2 {
+  font-size: 2.5vmin;
+  font-weight: 800;
+  color: #a3aac4;
+}
+
+#login-page input {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: none;
+  font-size: 1rem;
+  background-color: #192540;
+  color: #a3aac4;
+  margin-bottom: 2vmin;
+}
+
+#login-page button {
+  background-color: #34cfea;
+  color: #192540;
+  font-size: 2vmin;
+}
+
+#join-card {
+  display: grid;
+  grid-auto-flow: row;
+  padding: 3vmin;
+  background-color: #192540;
+  border-radius: 1rem;
+  gap: 1rem;
+}
+
+#joinButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2vmin;
+}
+
+#login-page #createBtn {
+  background-color: #2ef784;
 }
 
 #board {
@@ -111,11 +165,11 @@ textarea {
   gap: 1rem;
 }
 
-#boardButtons .material-icons {
+#joinButtons .material-icons .adapt {
   font-size: 3vmin;
 }
 
-#boardButtons button {
+button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -123,7 +177,7 @@ textarea {
   font-weight: 800;
   color: #a3aac4;
   background-color: #192540;
-  padding: 1rem;
+  padding: 2vmin;
   border-radius: 1rem;
   cursor: pointer;
   border: 0px;
@@ -135,13 +189,45 @@ textarea {
   color: #192540;
 }
 
+.otp-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+#join-card .otp-container input {
+  background-color: #1f2b49;
+  width: 4vmin;
+  height: 5vmin;
+  text-align: center;
+  font-size: 4vmin;
+  font-weight: bold;
+  border: 2px solid #34cfea;
+  border-radius: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+#join-card .otp-container input:focus {
+  border-color: #2ef784; /* Highlights the active box */
+}
+
 .tableContainer {
   display: block;
   width: 40vmin;
   background-color: #091328;
   color: white;
   border-radius: 1rem;
-  max-height: 80vmin;
+  margin: 1rem;
+  /* height: 80vmin; */
+}
+
+.tableContainer p#roomCode {
+  text-align: center;
+  font-size: 4vmin;
+  font-weight: bold;
+  color: #2ef784;
 }
 
 .moveTableContainer {
@@ -152,16 +238,15 @@ textarea {
 
 .tableContainer h2 {
   font-size: 2vmin;
-  margin-left: 2 rem;
   color: #a3aac4;
   text-align: center;
-  margin: 2rem;
+  margin: 1rem;
 }
 
 table {
   border-collapse: collapse;
   width: 100%;
-  max-height: 60vmin;
+  height: 60vmin;
 }
 
 thead,
@@ -240,4 +325,8 @@ tr:hover {
   flex-direction: column; /* Stack children vertically */
   justify-content: center; /* Center children along the main axis (vertical) */
   align-items: center; /* Center children along the cross axis (horizontal) */
+}
+
+.hidden {
+  display: none !important;
 }
