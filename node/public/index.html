@@ -45,10 +45,10 @@
         </div>
         <div id="joinButtons">
           <button id="createBtn">
-            <span class="material-icons adapt">add</span>CREATE ROOM
+            <span class="material-icons md-36">add</span>CREATE ROOM
           </button>
           <button id="joinBtn">
-            <span class="material-icons adapt">meeting_room</span>JOIN ROOM
+            <span class="material-icons md-36">meeting_room</span>JOIN ROOM
           </button>
         </div>
       </div>
@@ -125,13 +125,13 @@
         </div>
         <div id="boardButtons">
           <button id="resignBtn">
-            <span class="material-icons"> flag </span>RESIGN
+            <span class="material-icons md-36"> flag </span>RESIGN
           </button>
           <button id="drawBtn">
-            <span class="material-icons">handshake</span>DRAW
+            <span class="material-icons md-36">handshake</span>DRAW
           </button>
           <button id="resetBtn">
-            <span class="material-icons">autorenew</span>RESET
+            <span class="material-icons md-36">autorenew</span>RESET
           </button>
         </div>
       </div>
@@ -152,6 +152,14 @@
         <p id="roomCode">X X X X</p>
       </div>
     </div>
+    <dialog id="resignConfirmation">
+      <h2>ARE YOU SURE?</h2>
+      <div id="dialogButtons">
+        <button id="cancelResign">CANCEL</button>
+        <button id="resignConfirmed">RESIGN</button>
+      </div>
+    </dialog>
+    <dialog id="drawConfirmation"></dialog>
     <script src="./js/index.js" type="module"></script>
   </body>
 </html>

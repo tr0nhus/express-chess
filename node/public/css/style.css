@@ -173,7 +173,7 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5vmin;
+  font-size: 2vmin;
   font-weight: 800;
   color: #a3aac4;
   background-color: #192540;
@@ -329,4 +329,35 @@ tr:hover {
 
 .hidden {
   display: none !important;
+}
+
+#resignConfirmation {
+  background-color: #091328;
+  color: #a3aac4;
+  border: none;
+  border-radius: 1rem;
+  width: 30%;
+  max-width: 600px;
+  text-align: center;
+  font-size: 2vmin;
+}
+
+#resignConfirmation #dialogButtons {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+#resignConfirmation #dialogButtons button {
+  font-size: 2vmin;
+}
+
+#resignConfirmed {
+  background-color: #972424;
+}
+
+dialog::backdrop {
+  background-color: rgb(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px); /* The actual blur effect */
 }

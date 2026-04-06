@@ -9,7 +9,30 @@ const gamePage = document.getElementById("game-page");
 const loginForm = document.getElementById("login-form");
 const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
+
+const resignModal = document.getElementById("resignConfirmation");
+const cancelResign = document.getElementById("cancelResign");
+const resignConfirmed = document.getElementById("resignConfirmed");
+
+const resignBtn = document.getElementById("resignBtn");
+const drawBtn = document.getElementById("drawBtn");
 const resetBtn = document.getElementById("resetBtn");
+
+resignBtn.addEventListener("click", () => {
+  resignModal.showModal();
+});
+
+cancelResign.addEventListener("click", () => {
+  resignModal.close();
+});
+
+resignConfirmed.addEventListener("click", () => {
+  socket.emit("resign");
+
+  gamePage.classList.add("hidden");
+  loginPage.classList.remove("hidden");
+  resignModal.close();
+});
 
 const inputs = document.querySelectorAll(".otp-container input");
 
