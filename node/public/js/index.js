@@ -22,6 +22,29 @@ const resignBtn = document.getElementById("resignBtn");
 const drawBtn = document.getElementById("drawBtn");
 const resetBtn = document.getElementById("resetBtn");
 
+const gameOverScreen = document.getElementById("gameOver");
+const winMessage = document.getElementById("winCondition");
+const gameOverContainer = document.getElementById("gameOverMessage");
+const gameOverDismiss = document.getElementById("backButton");
+
+gameOverDismiss.addEventListener("click", () => {
+  gameOverScreen.close();
+
+  socket.emit("leaveRoom");
+
+  inputs.forEach((input) => {
+    input.value = "";
+  });
+  gamePage.classList.add("hidden");
+  loginPage.classList.remove("hidden");
+});
+
+gameOverScreen.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+  }
+});
+
 resignBtn.addEventListener("click", () => {
   resignModal.showModal();
 });
@@ -142,6 +165,18 @@ let turn = null;
 
 socket.on("winner", (data) => {
   const { winner, winCondition } = data;
+  gameOverContainer.classList.remove("win", "loss", "draw");
+  if (winner === "draw") {
+    gameOverContainer.classList.add("draw");
+    winMessage.innerText = "DRAW";
+  } else if (winner === player) {
+    gameOverContainer.classList.add("win");
+    winMessage.innerText = "CHECKMATE";
+  } else {
+    gameOverContainer.classList.add("loss");
+    winMessage.innerText = "LOSS";
+  }
+  gameOverScreen.showModal();
   console.log(winner, winCondition);
 });
 

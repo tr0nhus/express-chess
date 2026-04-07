@@ -86,7 +86,7 @@ export default function Chess() {
     const fromSquare = this.getSquare(from);
     const fromPieceColor = this._getPieceColor(fromSquare);
     const toSquare = this.getSquare(to);
-    if (enPessentTarget) {
+    if (enPessentTarget || toSquare.piece) {
       specials.push("attack");
     }
 

@@ -59,6 +59,20 @@ textarea {
   font-size: 48px;
 }
 
+/* Rules for sizing the icon. */
+.material-icons-outlined.md-18 {
+  font-size: 18px;
+}
+.material-icons-outlined.md-24 {
+  font-size: 24px;
+}
+.material-icons-outlined.md-36 {
+  font-size: 36px;
+}
+.material-icons-outlined.md-48 {
+  font-size: 48px;
+}
+
 /* Rules for using icons as black on a light background. */
 .material-icons.md-dark {
   color: rgba(0, 0, 0, 0.54);
@@ -126,7 +140,7 @@ textarea {
 #login-page button {
   background-color: #34cfea;
   color: #192540;
-  font-size: 2vmin;
+  font-size: 1.5vmin;
 }
 
 #join-card {
@@ -165,15 +179,11 @@ textarea {
   gap: 1rem;
 }
 
-#joinButtons .material-icons .adapt {
-  font-size: 3vmin;
-}
-
 button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 2vmin;
+  font-size: 1.5vmin;
   font-weight: 800;
   color: #a3aac4;
   background-color: #192540;
@@ -182,6 +192,7 @@ button {
   cursor: pointer;
   border: 0px;
   gap: 1rem;
+  user-select: none;
 }
 
 #boardButtons #resetBtn {
@@ -214,13 +225,19 @@ button {
 }
 
 .tableContainer {
-  display: block;
+  display: grid;
+  grid-template-rows: 1fr auto;
   width: 40vmin;
   background-color: #091328;
   color: white;
   border-radius: 1rem;
   margin: 1rem;
-  /* height: 80vmin; */
+  max-height: 90vmin;
+}
+
+#info {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
 }
 
 .tableContainer p#roomCode {
@@ -231,9 +248,8 @@ button {
 }
 
 .moveTableContainer {
-  display: block;
   overflow-y: auto;
-  max-height: 60vmin;
+  min-height: 0;
 }
 
 .tableContainer h2 {
@@ -246,23 +262,10 @@ button {
 table {
   border-collapse: collapse;
   width: 100%;
-  height: 60vmin;
-}
-
-thead,
-tbody {
-  display: block;
-}
-
-tbody {
-  overflow-y: auto;
-  overflow-x: hidden;
+  height: auto;
 }
 
 tr {
-  display: table;
-  width: 100%;
-  table-layout: fixed;
   font-size: 2vmin;
 }
 
@@ -283,8 +286,12 @@ td {
   text-align: left;
 }
 
-tr:hover {
+#move-table tr:hover {
   background-color: #0b1f2c;
+}
+
+.moveTableContainer {
+  height: 50vmin;
 }
 
 .square {
@@ -331,7 +338,8 @@ tr:hover {
   display: none !important;
 }
 
-dialog {
+#resignConfirmation,
+#errorModal {
   background-color: #091328;
   color: #a3aac4;
   border: none;
@@ -364,4 +372,172 @@ dialog::backdrop {
 
 #errorMessage {
   color: #972424;
+}
+
+hr {
+  margin: 0px;
+}
+
+#small-nav {
+  display: grid;
+  grid-auto-flow: row;
+}
+
+#small-nav div {
+  display: grid;
+  grid-auto-flow: column;
+}
+
+#small-nav button {
+  background-color: transparent;
+}
+
+.active {
+  color: #34cfea;
+}
+
+.win {
+  color: #2ef784;
+}
+
+.loss {
+  color: #972424;
+}
+
+.draw {
+  color: #a3aac4;
+}
+
+#gameOver {
+  background-color: transparent;
+  border: 0px;
+  padding: 50px;
+}
+
+#gameOverContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#gameOver h1 {
+  font-size: 14vmin;
+  margin: 0px 0px 10px;
+  font-style: italic;
+  font-weight: 800;
+  user-select: none;
+}
+
+#gameOver p {
+  user-select: none;
+  font-weight: 600;
+  margin: 0;
+}
+
+#gameOverMessage {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.neon-text {
+  color: inherit;
+  /* Text Shadow: x-offset y-offset blur-radius color */
+  text-shadow: 0 0 10px currentColor;
+}
+
+dialog {
+  border: none; /* Removes the static border */
+  outline: none; /* Removes the focus ring */
+}
+
+/* A safety net for some browsers */
+dialog:focus {
+  outline: none;
+}
+
+#seperator {
+  color: inherit;
+
+  display: flexbox;
+  height: 5px;
+  width: 20vw; /* Spans most of the container */
+  max-width: 600px; /* Prevents it from getting too long on wide screens */
+  background: currentColor;
+
+  /* 2. Shape: Slightly rounded ends look more polished */
+  border-radius: 5px;
+
+  box-shadow: 0 0 10px 3px currentColor;
+
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 20%,
+    black 80%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 20%,
+    black 80%,
+    transparent
+  );
+}
+
+#gameSummary {
+  margin-top: 40px;
+  display: grid;
+  width: 80vw;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+#actions {
+  display: grid;
+  grid-auto-flow: row;
+  gap: 1rem;
+}
+
+#actions button {
+  font-size: 1rem;
+}
+
+#rematchBtn {
+  background-color: #2ef784;
+  color: #1f2b49;
+  height: 6rem;
+  font-size: 1rem;
+}
+
+#stats {
+  background-color: #091328;
+  height: auto;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+#stats tr,
+#stats td {
+  width: auto;
+  font-size: 0.8rem;
+  color: #a3aac4;
+  border-bottom: 0px;
+}
+
+#stats td:last-child {
+  text-align: end;
+}
+
+#recap {
+  background-color: #1f2b49;
+  border-radius: 1rem;
+}
+
+#backButton {
+  margin: 1rem;
+  background: transparent;
+  width: 300px;
 }

@@ -6,6 +6,10 @@
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="./css/style.css" />
     <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+      rel="stylesheet"
+    />
+    <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
     />
@@ -45,10 +49,10 @@
         </div>
         <div id="joinButtons">
           <button id="createBtn">
-            <span class="material-icons md-36">add</span>CREATE ROOM
+            <span class="material-icons">add</span>CREATE ROOM
           </button>
           <button id="joinBtn">
-            <span class="material-icons md-36">meeting_room</span>JOIN ROOM
+            <span class="material-icons">meeting_room</span>JOIN ROOM
           </button>
         </div>
       </div>
@@ -125,31 +129,47 @@
         </div>
         <div id="boardButtons">
           <button id="resignBtn">
-            <span class="material-icons md-36"> flag </span>RESIGN
+            <span class="material-icons"> flag </span>RESIGN
           </button>
           <button id="drawBtn">
-            <span class="material-icons md-36">handshake</span>DRAW
+            <span class="material-icons">handshake</span>DRAW
           </button>
-          <button id="resetBtn">
-            <span class="material-icons md-36">autorenew</span>RESET
+          <button id="resetBtn" class="hidden">
+            <span class="material-icons">autorenew</span>RESET
           </button>
         </div>
       </div>
       <div class="tableContainer">
-        <h2>MOVE HISTORY</h2>
-        <div class="moveTableContainer scroll-box">
-          <table id="move-table">
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>...</td>
-                <td>...</td>
-              </tr>
-            </tbody>
-          </table>
+        <div id="chat" class="hidden"></div>
+        <div id="info" class="">
+          <h2>MOVE HISTORY</h2>
+          <div class="moveTableContainer scroll-box">
+            <table id="move-table">
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>...</td>
+                  <td>...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h2>ROOM CODE</h2>
+          <p id="roomCode">X X X X</p>
         </div>
-        <h2>ROOM CODE</h2>
-        <p id="roomCode">X X X X</p>
+
+        <div id="small-nav">
+          <hr />
+          <div>
+            <button>
+              <span class="material-icons md-36 active">info</span>
+            </button>
+            <button>
+              <span class="material-icons-outlined md-36">chat</span>
+            </button>
+            <!-- <button><span class="material-icons md-36">info</span></button> -->
+          </div>
+        </div>
       </div>
     </div>
     <dialog id="resignConfirmation">
@@ -164,6 +184,48 @@
       <button id="dismissError">DISMISS</button>
     </dialog>
     <dialog id="drawConfirmation"></dialog>
+    <dialog id="gameOver">
+      <div id="gameOverContainer">
+        <div id="gameOverMessage" class="">
+          <p class="neon-text">MATCH RESULT</p>
+          <h1 id="winCondition" class="neon-text">CHECKMATE</h1>
+          <div id="seperator" class=""></div>
+        </div>
+        <div id="gameSummary">
+          <div id="recap"></div>
+          <div id="actions">
+            <button id="rematchBtn" class="win">
+              <span class="material-icons md-36">autorenew</span>REMATCH
+            </button>
+            <button>
+              <span class="material-icons-outlined md-36">analytics</span
+              >ANALYZE GAME
+            </button>
+            <button>
+              <span class="material-icons md-36">search</span>FIND NEW OPPONENT
+            </button>
+            <div id="stats">
+              <table>
+                <tbody>
+                  <tr>
+                    <td>GAME TYPE</td>
+                    <td>CASUAL MATCH</td>
+                  </tr>
+                  <tr>
+                    <td>DURATION</td>
+                    <td>12M 34S</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <button id="backButton">
+          <span class="material-icons">keyboard_double_arrow_left</span>BACK TO
+          ROOMS
+        </button>
+      </div>
+    </dialog>
     <script src="./js/index.js" type="module"></script>
   </body>
 </html>

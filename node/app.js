@@ -90,6 +90,18 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("leaveRoom", (data) => {
+    const roomCode = socket.roomCode;
+    if (!roomCode || !games[roomCode]) {
+      socket.emit("error", "Cannot leave room: Not in an active game.");
+      return;
+    }
+    socket.leave(roomCode);
+    process.nextTick(() => {
+      cleanupRoom(roomCode);
+    });
+  });
+
   socket.on("resign", (data) => {
     const roomCode = socket.roomCode;
     if (!roomCode || !games[roomCode]) {
@@ -144,7 +156,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("gameState", (roomCode, callback) => {
-    console.log(roomCode);
+    // console.log(roomCode);
     if (!games[roomCode]) {
       socket.emit("error", `Game not found for room code: ${roomCode}`);
       return callback(null); // Indicate failure to the client
@@ -166,7 +178,7 @@ io.on("connection", (socket) => {
       socket.emit("status", `Not ${socket.player}'s turn to move`);
       return callback(false); // Indicate failure
     }
-    console.log(data);
+    // console.log(data);
 
     const moved = games[data.roomCode].move({
       from: data.from,
