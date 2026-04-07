@@ -4,7 +4,6 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import Chess from "./routes/myChess.js";
 import { createServer } from "http";
-import { error } from "console";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,6 +18,16 @@ const games = {};
 app.use(express.static(join(__dirname, "public")));
 
 io.on("connection", (socket) => {
+  const cleanupRoom = (roomCode) => {
+    const clients = io.sockets.adapter.rooms.get(roomCode);
+    const numClients = clients ? clients.size : 0;
+
+    if (numClients === 0) {
+      delete games[roomCode];
+      console.log(`Room ${roomCode} empty, game has been cleared`);
+    }
+  };
+
   socket.on("createRoom", (data, callback) => {
     let roomCode;
     do {
@@ -38,19 +47,18 @@ io.on("connection", (socket) => {
 
     callback(roomCode);
   });
-  socket.on("joinRoom", (roomCode) => {
+  socket.on("joinRoom", (roomCode, callback) => {
     // Get the number of players in this room
     const connectedSockets = io.sockets.adapter.rooms.get(roomCode);
+
+    if (!connectedSockets) {
+      socket.emit("error", `No room with that code`);
+      return;
+    }
+
     const numClients = connectedSockets ? connectedSockets.size : 0;
 
-    if (numClients === 0) {
-      games[roomCode] = new Chess();
-      socket.join(roomCode);
-      socket.player = "white";
-      socket.roomCode = roomCode; // Store roomCode on the socket
-      socket.emit("playerRole", socket.player);
-      socket.emit("status", "Waiting for oppononent...");
-    } else if (numClients === 1) {
+    if (numClients === 1) {
       // get the socket of the other player in the room
       const firstSocketId = connectedSockets.values().next().value;
       const firstPlayerSocket = io.sockets.sockets.get(firstSocketId);
@@ -61,6 +69,13 @@ io.on("connection", (socket) => {
       socket.roomCode = roomCode;
       socket.emit("playerRole", socket.player);
       io.to(roomCode).emit("status", "Second player joined...");
+      // Send initial board state to both players after the second player joins
+      io.to(roomCode).emit("update", games[roomCode].turn);
+      return callback(true);
+    } else if (numClients >= 2) {
+      // Room is full
+      socket.emit("error", `Room ${roomCode} is already full.`);
+      return callback(false);
     }
   });
 
@@ -68,30 +83,72 @@ io.on("connection", (socket) => {
     for (const room of socket.rooms) {
       if (room !== socket.id) {
         socket.to(room).emit("status", "Your opponent disconnected.");
+        process.nextTick(() => {
+          cleanupRoom(room);
+        });
       }
     }
   });
 
+  socket.on("resign", (data) => {
+    const roomCode = socket.roomCode;
+    if (!roomCode || !games[roomCode]) {
+      socket.emit("error", "Cannot resign: Not in an active game.");
+      return;
+    }
+
+    const winner = socket.player === "white" ? "black" : "white";
+    games[roomCode].winCondition = `Your opponent resigned, you win`;
+
+    socket.to(roomCode).emit("winner", {
+      winner: winner,
+      winCondition: games[roomCode].winCondition,
+    });
+
+    socket.leave(roomCode);
+    process.nextTick(() => {
+      cleanupRoom(roomCode);
+    });
+  });
+
   socket.on("reset", (roomCode) => {
-    if (!games[roomCode]) throw new Error(`No Room with code: ${roomCode}`);
+    if (!games[roomCode]) {
+      socket.emit(
+        "error",
+        `Cannot reset: Game not found for room code: ${roomCode}`,
+      );
+      return;
+    }
     games[roomCode].board = games[roomCode]._createBoard();
     games[roomCode].turn = "white";
     games[roomCode].moveHistory = [];
     io.to(roomCode).emit("update", games[roomCode].turn);
   });
 
-  socket.on("getMoves", (data, callback) => {
-    const validMoves = games[socket.roomCode].validMoves(data);
-    callback(validMoves);
-  });
-
   socket.on("getTurn", (callback) => {
+    if (!games[socket.roomCode]) {
+      socket.emit("error", `Game not found for room code: ${socket.roomCode}`);
+      return callback(null); // Indicate failure
+    }
     const turn = games[socket.roomCode].turn;
     callback(turn);
   });
 
+  socket.on("getMoves", (data, callback) => {
+    if (!games[socket.roomCode]) {
+      socket.emit("error", `Game not found for room code: ${socket.roomCode}`);
+      return callback([]); // Return empty array for moves
+    }
+    const validMoves = games[socket.roomCode].validMoves(data);
+    callback(validMoves);
+  });
+
   socket.on("gameState", (roomCode, callback) => {
     console.log(roomCode);
+    if (!games[roomCode]) {
+      socket.emit("error", `Game not found for room code: ${roomCode}`);
+      return callback(null); // Indicate failure to the client
+    }
     const data = {
       board: games[roomCode].board,
       turn: games[roomCode].turn,
@@ -101,8 +158,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("move", (data, callback) => {
+    if (!games[data.roomCode]) {
+      socket.emit("error", `Game not found for room code: ${data.roomCode}`);
+      return callback(false); // Indicate failure to the client
+    }
     if (games[data.roomCode].turn !== socket.player) {
       socket.emit("status", `Not ${socket.player}'s turn to move`);
+      return callback(false); // Indicate failure
     }
     console.log(data);
 
@@ -113,8 +175,15 @@ io.on("connection", (socket) => {
       attackTarget: data.enPessentTarget || "",
     });
 
-    if (games[socket.roomCode]._isKingInCheck(games[socket.roomCode].turn)) {
-      socket.emit("check", `${socket.player}'s king is in check`);
+    // if (games[socket.roomCode]._isKingInCheck(games[socket.roomCode].turn)) {
+    //   socket.emit("check", `${socket.player}'s king is in check`);
+    // }
+
+    if (games[socket.roomCode].winner) {
+      io.to(socket.roomCode).emit("winner", {
+        winner: games[socket.roomCode].winner,
+        winCondition: games[socket.roomCode].winCondition,
+      });
     }
 
     if (moved) {

@@ -51,7 +51,7 @@ This is a personal project I'm working on during my free time as a second-semest
 Here are some potential features and improvements I'm considering for future development:
 
 - **AI Opponent**: Implement an AI engine so players can play against the computer when no human opponent is available.
-- **Enhanced Room UI**: Improve the room creation and joining interface with better user experience, such as auto-generated room codes, room listings, or invite links.
+- **Enhanced Room UI**: Improve the room creation and joining interface with better user experience, such as room listings or invite links.
 - **Win Registration and Checkmate Detection**: Implement automatic detection of checkmate, stalemate, and other win conditions, with proper game end notifications.
 - **Additional Chess Rules**: Full support for en passant, pawn promotion, and other special moves.
 - **Game History and Replay**: Allow players to view past games or replay moves.

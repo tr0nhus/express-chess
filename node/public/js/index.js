@@ -10,6 +10,10 @@ const loginForm = document.getElementById("login-form");
 const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
 
+const errorModal = document.getElementById("errorModal");
+const errorMessage = document.getElementById("errorMessage");
+const dismissError = document.getElementById("dismissError");
+
 const resignModal = document.getElementById("resignConfirmation");
 const cancelResign = document.getElementById("cancelResign");
 const resignConfirmed = document.getElementById("resignConfirmed");
@@ -26,9 +30,16 @@ cancelResign.addEventListener("click", () => {
   resignModal.close();
 });
 
+dismissError.addEventListener("click", () => {
+  errorModal.close();
+});
+
 resignConfirmed.addEventListener("click", () => {
   socket.emit("resign");
 
+  inputs.forEach((input) => {
+    input.value = "";
+  });
   gamePage.classList.add("hidden");
   loginPage.classList.remove("hidden");
   resignModal.close();
@@ -46,6 +57,36 @@ inputs.forEach((input, index) => {
   input.addEventListener("keydown", (e) => {
     if (e.key === "Backspace" && !e.target.value && index > 0) {
       inputs[index - 1].focus(); // Move back on delete
+    } else if (e.key === "Enter") {
+      joinRoom();
+    }
+  });
+
+  input.addEventListener("paste", (event) => {
+    event.preventDefault(); // Prevent default paste behavior
+    // Access the clipboard data
+    const pasteData = (event.clipboardData || window.clipboardData).getData(
+      "text",
+    );
+    // Sanitize and limit the pasted data to the number of input fields
+    const sanitizedData = pasteData
+      .replace(/\D/g, "")
+      .substring(0, inputs.length);
+
+    // Distribute the pasted data across the input fields
+    for (let i = 0; i < inputs.length; i++) {
+      if (i < sanitizedData.length) {
+        inputs[i].value = sanitizedData[i];
+      } else {
+        inputs[i].value = ""; // Clear any remaining inputs if pasted data is shorter
+      }
+    }
+    // Move focus to the next empty input or the last input if all are filled
+    const nextEmptyInput = Array.from(inputs).find((input) => !input.value);
+    if (nextEmptyInput) {
+      nextEmptyInput.focus();
+    } else if (inputs.length > 0) {
+      inputs[inputs.length - 1].focus();
     }
   });
 });
@@ -57,25 +98,12 @@ resetBtn.addEventListener("click", async (e) => {
 });
 
 joinBtn.addEventListener("click", (e) => {
-  roomCode = "";
-
-  inputs.forEach((input) => {
-    roomCode += input.value;
-  });
-
-  if (roomCode.length !== 4) return;
-
-  loginPage.classList.add("hidden");
-  gamePage.classList.remove("hidden");
-
-  socket.emit("joinRoom", roomCode);
+  joinRoom();
 });
 
 createBtn.addEventListener("click", async (e) => {
   roomCode = await requestFromServer("createRoom", "Clicked create button");
   console.log(roomCode);
-  loginPage.classList.add("hidden");
-  gamePage.classList.remove("hidden");
   renderBoard();
 });
 
@@ -93,10 +121,34 @@ function requestFromServer(event, data) {
   });
 }
 
+// Helper function for joining a room based on the roomCode input
+async function joinRoom() {
+  roomCode = "";
+
+  inputs.forEach((input) => {
+    roomCode += input.value;
+  });
+
+  if (roomCode.length !== 4) return;
+
+  const joined = await requestFromServer("joinRoom", roomCode);
+  // socket.emit("joinRoom", roomCode);
+}
+
 let player = null;
 let selectedSquare = null;
 let currentValidMoves = [];
 let turn = null;
+
+socket.on("winner", (data) => {
+  const { winner, winCondition } = data;
+  console.log(winner, winCondition);
+});
+
+socket.on("error", (message) => {
+  errorMessage.innerText = message.toUpperCase();
+  errorModal.showModal();
+});
 
 socket.on("status", (message) => {
   console.log(message);
@@ -122,9 +174,11 @@ async function updateValidMoves(square) {
 socket.on("playerRole", (data) => {
   console.log(data);
   player = data;
-  if (roomCode) {
-    renderBoard();
-  }
+  // if (roomCode) {
+  //   renderBoard();
+  // }
+  loginPage.classList.add("hidden");
+  gamePage.classList.remove("hidden");
 });
 
 // renderBoard();
@@ -141,11 +195,18 @@ async function renderBoard() {
   // clear the board
   const boardElement = document.getElementById("board");
   const roomCodeDisplay = document.getElementById("roomCode");
-  roomCodeDisplay.innerText = roomCode.split("").join(" ");
+  roomCodeDisplay.innerText = roomCode;
 
   // console.log(roomCode);
   const data = await requestFromServer("gameState", roomCode);
 
+  // Handle cases where game state might not be returned (e.g., room not found)
+  if (!data || !data.board) {
+    console.error("Failed to get game state or board data is missing.");
+    errorMessage.innerText = "Failed to load game board. Please try again.";
+    errorModal.showModal();
+    return; // Stop rendering if data is invalid
+  }
   const board = data.board;
   const moveHistory = data.moveHistory;
 
@@ -269,9 +330,11 @@ async function handleSquareClick(squareName) {
   const currentTurn = await getTurn(); // Await the current turn
   // console.log("Current turn:", currentTurn);
   if (currentTurn !== player) {
-    throw new Error(
+    // Log a warning instead of throwing an error to prevent crashing the client script
+    console.warn(
       `It's not your turn. Current turn: ${currentTurn}, Your player: ${player}`,
     );
+    return; // Prevent further execution
   }
 
   if (selectedSquare === null) {
@@ -312,7 +375,8 @@ async function handleSquareClick(squareName) {
       console.log("Valid move was: ", move);
       console.log("En Pessent Target was: ", move.enPessentTarget);
 
-      const moved = requestFromServer("move", {
+      const moved = await requestFromServer("move", {
+        // Await the promise to get the actual boolean result
         roomCode: roomCode,
         from: selectedSquare,
         to: squareName,

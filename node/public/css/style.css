@@ -331,7 +331,7 @@ tr:hover {
   display: none !important;
 }
 
-#resignConfirmation {
+dialog {
   background-color: #091328;
   color: #a3aac4;
   border: none;
@@ -360,4 +360,8 @@ tr:hover {
 dialog::backdrop {
   background-color: rgb(0, 0, 0, 0.5);
   backdrop-filter: blur(8px); /* The actual blur effect */
+}
+
+#errorMessage {
+  color: #972424;
 }

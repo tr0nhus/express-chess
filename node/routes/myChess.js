@@ -39,6 +39,8 @@ export default function Chess() {
   };
 
   this.moveHistory = [];
+  this.winner = null;
+  this.winCondition = null;
 
   this._createBoard = function () {
     let board = [];
@@ -144,11 +146,22 @@ export default function Chess() {
     // Switch turns
     this.turn = this.turn === "white" ? "black" : "white";
 
+    // check the status of the new player
     if (this._isKingInCheck(this.turn)) {
-      if (this._isCheckMate(this.turn)) {
+      // Check for checkmate.
+      if (this._hasNoValidMoves(this.turn)) {
         specials.push("mate");
+        this.winner = this.turn === "white" ? "black" : "white";
+        this.winCondition = `${this.turn}'s King is in checkmate. ${this.winner} wins the game.`;
       } else {
         specials.push("check");
+      }
+    } else {
+      // Check for stalemate.
+      if (this._hasNoValidMoves(this.turn)) {
+        specials.push("stalemate");
+        this.winner = "draw";
+        this.winCondition = `The game is a draw by stalemate`;
       }
     }
 
@@ -161,7 +174,6 @@ export default function Chess() {
     );
 
     // TODO: Handle special moves like pawn promotion.
-    // TODO: Check for checkmate/stalemate after the move.
 
     return true;
   };
@@ -315,7 +327,7 @@ export default function Chess() {
     );
   };
 
-  this._isCheckMate = function (color) {
+  this._hasNoValidMoves = function (color) {
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         const square = this.board[i][j];
