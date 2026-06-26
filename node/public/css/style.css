@@ -298,6 +298,8 @@ td {
   width: 10vmin;
   height: 10vmin;
   font-size: 10vmin;
+  line-height: 1;
+  font-family: "Segoe UI Symbol", "DejaVu Sans", "Apple Symbols", sans-serif;
   text-align: center;
   color: #a3aac4;
   display: flex;
